@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "762321096086",
+    "project_id": "runova-group",
+    "storage_bucket": "runova-group.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:762321096086:android:a3175db3567e24f1dde1b7",
+        "android_client_info": {
+          "package_name": "com.runova.shop.runova_admin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCEkeovGtXDHUSONOyzQLbMoeO_YTvnMi8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

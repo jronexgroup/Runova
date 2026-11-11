@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../firebase_options.dart';
 
 /// Manages Firebase initialization and connectivity state.
 /// Designed to run gracefully offline-first until Firebase credentials are provided.
@@ -25,7 +26,14 @@ class FirebaseManager {
         return true;
       }
 
-      await Firebase.initializeApp();
+      try {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+      } catch (_) {
+        await Firebase.initializeApp();
+      }
+
       _isInitialized = true;
       debugPrint('[FirebaseManager] Firebase initialized successfully with active credentials.');
       return true;
