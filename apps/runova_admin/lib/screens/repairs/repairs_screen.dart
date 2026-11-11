@@ -17,6 +17,84 @@ class _RepairsScreenState extends State<RepairsScreen> {
   RepairStatus? selectedFilter;
   final Set<String> playingAudioNotes = {};
 
+  void _openRegisterRepairDialog() {
+    final deviceCtrl = TextEditingController();
+    final reportedCtrl = TextEditingController();
+    final inspectedCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
+    final nameCtrl = TextEditingController();
+    final phoneCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Register New Repair Job'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: deviceCtrl,
+                decoration: const InputDecoration(labelText: 'Device Name (e.g. Redmi Note 10) *'),
+              ),
+              TextField(
+                controller: reportedCtrl,
+                decoration: const InputDecoration(labelText: 'Customer Reported Problem *'),
+              ),
+              TextField(
+                controller: inspectedCtrl,
+                decoration: const InputDecoration(labelText: 'Inspection Findings *'),
+              ),
+              TextField(
+                controller: descCtrl,
+                maxLines: 2,
+                decoration: const InputDecoration(labelText: 'Work Description / Notes *'),
+              ),
+              TextField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(labelText: 'Customer Name (Optional)'),
+              ),
+              TextField(
+                controller: phoneCtrl,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(labelText: 'Customer Phone (Optional)'),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryContainer,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              final device = deviceCtrl.text.trim();
+              final reported = reportedCtrl.text.trim();
+              final inspected = inspectedCtrl.text.trim();
+              final desc = descCtrl.text.trim();
+
+              if (device.isNotEmpty && reported.isNotEmpty && inspected.isNotEmpty && desc.isNotEmpty) {
+                await ShopState.instance.registerRepairTicket(
+                  deviceName: device,
+                  reportedProblem: reported,
+                  inspectedProblem: inspected,
+                  description: desc,
+                  customerName: nameCtrl.text.trim(),
+                  customerPhone: phoneCtrl.text.trim(),
+                  assignedWorkerId: 'WORKER-1',
+                );
+                if (ctx.mounted) Navigator.pop(ctx);
+              }
+            },
+            child: const Text('Register Job'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _openDeliveryModal(RepairTicket ticket) async {
     final invoice = await showModalBottomSheet<Invoice>(
       context: context,
@@ -88,28 +166,46 @@ class _RepairsScreenState extends State<RepairsScreen> {
         return ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           children: [
-            // 1. Search Bar
-            Container(
-              height: 44,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLowest,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.outlineVariant),
-              ),
-              child: Row(
-                children: const [
-                  Icon(Icons.search, size: 20, color: AppColors.outline),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Search ticket #, device, or phone...',
-                      style: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 13),
+            // 1. Search Bar & New Job Trigger
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 44,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceContainerLowest,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.outlineVariant),
+                    ),
+                    child: Row(
+                      children: const [
+                        Icon(Icons.search, size: 20, color: AppColors.outline),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Search ticket #, device, phone...',
+                            style: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 13),
+                          ),
+                        ),
+                        Icon(Icons.qr_code_scanner, size: 20, color: AppColors.primary),
+                      ],
                     ),
                   ),
-                  Icon(Icons.qr_code_scanner, size: 20, color: AppColors.primary),
-                ],
-              ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryContainer,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('New Job', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                  onPressed: _openRegisterRepairDialog,
+                ),
+              ],
             ),
             const SizedBox(height: 12),
 
@@ -136,209 +232,235 @@ class _RepairsScreenState extends State<RepairsScreen> {
             ),
             const SizedBox(height: 14),
 
-            // 3. Ticket Cards
-            ...filteredTickets.map((ticket) {
-              final isDone = ticket.status == RepairStatus.done;
-              final isDelivered = ticket.status == RepairStatus.delivered;
-              final hasAudio = ticket.audioUrl != null;
-              final isAudioPlaying = playingAudioNotes.contains(ticket.id);
-
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(14),
+            // 3. Ticket Cards or Clean Empty State
+            if (filteredTickets.isEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 16),
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: AppColors.surfaceContainerLowest,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: isDone ? AppColors.statusDoneBorder : AppColors.outlineVariant,
-                    width: isDone ? 1.5 : 0.5,
-                  ),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x080F172A),
-                      blurRadius: 4,
-                      offset: Offset(0, 1),
+                  border: Border.all(color: AppColors.outlineVariant, width: 0.5),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.build_outlined, size: 40, color: AppColors.outline),
+                    const SizedBox(height: 10),
+                    Text(
+                      selectedFilter == null ? 'No repair tickets recorded yet' : 'No tickets in "${selectedFilter!.label}" status',
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Tap "+ New Job" above to register a new repair intake.',
+                      style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant),
                     ),
                   ],
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Top Bar: Ticket ID, SLA, Status Chip
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              ticket.id,
-                              style: AppTypography.labelLg.copyWith(
-                                fontWeight: FontWeight.w800,
-                                fontFeatures: const [FontFeature.tabularFigures()],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppColors.surfaceContainerHigh,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                'Worker: ${ticket.assignedWorkerId ?? "Unassigned"}',
-                                style: const TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant),
-                              ),
-                            ),
-                          ],
-                        ),
-                        StatusChip(status: ticket.status),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
+              )
+            else
+              ...filteredTickets.map((ticket) {
+                final isDone = ticket.status == RepairStatus.done;
+                final isDelivered = ticket.status == RepairStatus.delivered;
+                final hasAudio = ticket.audioUrl != null;
+                final isAudioPlaying = playingAudioNotes.contains(ticket.id);
 
-                    // Device & Issue
-                    Text(ticket.deviceName, style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Reported: ${ticket.reportedProblem}',
-                      style: AppTypography.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isDone ? AppColors.statusDoneBorder : AppColors.outlineVariant,
+                      width: isDone ? 1.5 : 0.5,
                     ),
-                    Text(
-                      'Inspection: ${ticket.inspectedProblem}',
-                      style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w500),
-                    ),
-                    const SizedBox(height: 6),
-
-                    // Audio Note preview if present
-                    if (hasAudio) ...[
-                      InkWell(
-                        onTap: () {
-                          setState(() {
-                            if (isAudioPlaying) {
-                              playingAudioNotes.remove(ticket.id);
-                            } else {
-                              playingAudioNotes.add(ticket.id);
-                            }
-                          });
-                        },
-                        borderRadius: BorderRadius.circular(6),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceContainerHigh,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x080F172A),
+                        blurRadius: 4,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Top Bar: Ticket ID, SLA, Status Chip
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
                             children: [
-                              Icon(
-                                isAudioPlaying ? Icons.pause_circle : Icons.play_circle,
-                                size: 16,
-                                color: AppColors.primary,
-                              ),
-                              const SizedBox(width: 6),
                               Text(
-                                isAudioPlaying ? 'Playing Audio Note...' : 'Audio Note (0:18) • ভয়েস রেকর্ড',
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primary),
+                                ticket.id,
+                                style: AppTypography.labelLg.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  fontFeatures: const [FontFeature.tabularFigures()],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surfaceContainerHigh,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  'Worker: ${ticket.assignedWorkerId ?? "Unassigned"}',
+                                  style: const TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant),
+                                ),
                               ),
                             ],
                           ),
-                        ),
+                          StatusChip(status: ticket.status),
+                        ],
                       ),
                       const SizedBox(height: 8),
-                    ],
 
-                    // Parts Recorded (Admin view)
-                    if (ticket.parts.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceContainerLow,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Part: ${ticket.parts.first.description}',
-                              style: const TextStyle(fontSize: 11),
-                            ),
-                            Text(
-                              'Cost: ${ticket.totalPartsCost.format()}',
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary),
-                            ),
-                          ],
-                        ),
+                      // Device & Issue
+                      Text(ticket.deviceName, style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Reported: ${ticket.reportedProblem}',
+                        style: AppTypography.bodySm.copyWith(color: AppColors.onSurfaceVariant),
                       ),
-                    const SizedBox(height: 10),
+                      Text(
+                        'Inspection: ${ticket.inspectedProblem}',
+                        style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(height: 6),
 
-                    // Bottom Row: Customer Info & Action
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              ticket.customerName ?? 'No customer assigned',
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                            ),
-                            if (ticket.customerPhone != null)
-                              Text(
-                                ticket.customerPhone!,
-                                style: const TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
-                              ),
-                          ],
-                        ),
-
-                        if (isDone)
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryContainer,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            ),
-                            icon: const Icon(Icons.local_shipping, size: 16),
-                            label: const Text('Deliver & Collect', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
-                            onPressed: () => _openDeliveryModal(ticket),
-                          )
-                        else if (isDelivered)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: AppColors.statusDoneBg,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.check, size: 14, color: AppColors.statusDoneText),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Delivered • ${ticket.customerPayment?.format() ?? ""}',
-                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.statusDoneText),
-                                ),
-                              ],
-                            ),
-                          )
-                        else
-                          Container(
+                      // Audio Note preview if present
+                      if (hasAudio) ...[
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              if (isAudioPlaying) {
+                                playingAudioNotes.remove(ticket.id);
+                              } else {
+                                playingAudioNotes.add(ticket.id);
+                              }
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: AppColors.surfaceContainerHigh,
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: const Text(
-                              'Awaiting Done status',
-                              style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  isAudioPlaying ? Icons.pause_circle : Icons.play_circle,
+                                  size: 16,
+                                  color: AppColors.primary,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  isAudioPlaying ? 'Playing Audio Note...' : 'Audio Note • ভয়েস রেকর্ড',
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primary),
+                                ),
+                              ],
                             ),
                           ),
+                        ),
+                        const SizedBox(height: 8),
                       ],
-                    ),
-                  ],
-                ),
-              );
-            }),
+
+                      // Parts Recorded (Admin view)
+                      if (ticket.parts.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Part: ${ticket.parts.first.description}',
+                                style: const TextStyle(fontSize: 11),
+                              ),
+                              Text(
+                                'Cost: ${ticket.totalPartsCost.format()}',
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary),
+                              ),
+                            ],
+                          ),
+                        ),
+                      const SizedBox(height: 10),
+
+                      // Bottom Row: Customer Info & Action
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                ticket.customerName ?? 'No customer assigned',
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                              ),
+                              if (ticket.customerPhone != null)
+                                Text(
+                                  ticket.customerPhone!,
+                                  style: const TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
+                                ),
+                            ],
+                          ),
+
+                          if (isDone)
+                            ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primaryContainer,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              icon: const Icon(Icons.local_shipping, size: 16),
+                              label: const Text('Deliver & Collect', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                              onPressed: () => _openDeliveryModal(ticket),
+                            )
+                          else if (isDelivered)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: AppColors.statusDoneBg,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.check, size: 14, color: AppColors.statusDoneText),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Delivered • ${ticket.customerPayment?.format() ?? ""}',
+                                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.statusDoneText),
+                                  ),
+                                ],
+                              ),
+                            )
+                          else
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceContainerHigh,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                'Awaiting Done status',
+                                style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              }),
             const SizedBox(height: 24),
           ],
         );

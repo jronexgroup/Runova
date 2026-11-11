@@ -32,6 +32,98 @@ class _CoverFinderSheetState extends State<CoverFinderSheet> {
     });
   }
 
+  void _openAddCoverDialog() {
+    final baseCtrl = TextEditingController();
+    final modelsCtrl = TextEditingController();
+    final wholesalerCtrl = TextEditingController();
+    final buyCtrl = TextEditingController();
+    final sellCtrl = TextEditingController();
+    final stockCtrl = TextEditingController(text: '10');
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add Cover Group (Shared Stock)'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: baseCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Base Name (e.g. iPhone 13/14 MagSafe) *',
+                ),
+              ),
+              TextField(
+                controller: modelsCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Linked Models (comma separated) *',
+                  hintText: 'iPhone 13, iPhone 14',
+                ),
+              ),
+              TextField(
+                controller: wholesalerCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Wholesaler *',
+                ),
+              ),
+              TextField(
+                controller: buyCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Buy Price (₹) *', prefixText: '₹ '),
+              ),
+              TextField(
+                controller: sellCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Default Sell Price (₹) *', prefixText: '₹ '),
+              ),
+              TextField(
+                controller: stockCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Initial Shared Stock *'),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryContainer,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              final base = baseCtrl.text.trim();
+              final models = modelsCtrl.text
+                  .split(',')
+                  .map((e) => e.trim())
+                  .where((e) => e.isNotEmpty)
+                  .toList();
+              final wholesaler = wholesalerCtrl.text.trim();
+              final buy = double.tryParse(buyCtrl.text.trim()) ?? 0;
+              final sell = double.tryParse(sellCtrl.text.trim()) ?? 0;
+              final stock = int.tryParse(stockCtrl.text.trim()) ?? 0;
+
+              if (base.isNotEmpty && models.isNotEmpty && buy > 0 && sell > 0) {
+                await ShopState.instance.addCoverGroup(
+                  baseName: base,
+                  linkedModels: models,
+                  wholesaler: wholesaler.isNotEmpty ? wholesaler : 'Local Wholesaler',
+                  buyPrice: Money.fromRupees(buy),
+                  defaultSellPrice: Money.fromRupees(sell),
+                  initialStock: stock,
+                );
+                if (ctx.mounted) Navigator.pop(ctx);
+                if (mounted) _search(_searchController.text);
+              }
+            },
+            child: const Text('Save Cover Group'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ShopState.instance;
@@ -61,15 +153,24 @@ class _CoverFinderSheetState extends State<CoverFinderSheet> {
                   ),
                   const SizedBox(width: 8),
                   const BilingualText(
-                    primary: 'AI Cover Compatibility Engine',
+                    primary: 'Cover Compatibility Engine',
                     secondary: 'কভার সামঞ্জস্য ও শেয়ার্ড স্টক যাচাই',
                     primaryStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                   ),
                 ],
               ),
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => Navigator.pop(context),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.add_circle, color: AppColors.primaryContainer),
+                    tooltip: 'Add Cover Group',
+                    onPressed: _openAddCoverDialog,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
               ),
             ],
           ),
@@ -107,7 +208,21 @@ class _CoverFinderSheetState extends State<CoverFinderSheet> {
             child: ListView(
               shrinkWrap: true,
               children: [
-                if (hasSearched && searchResults.isEmpty)
+                if (state.coverGroups.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    alignment: Alignment.center,
+                    child: Column(
+                      children: [
+                        const Icon(Icons.phone_android, size: 36, color: AppColors.outline),
+                        const SizedBox(height: 8),
+                        const Text('No mobile cover groups registered yet', style: TextStyle(fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 4),
+                        const Text('Tap "+" at the top right to create your first cover group.', style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant)),
+                      ],
+                    ),
+                  )
+                else if (hasSearched && searchResults.isEmpty)
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(

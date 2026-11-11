@@ -201,21 +201,48 @@ class _MoreScreenState extends State<MoreScreen> {
             const SizedBox(height: 10),
 
             // Expenses List
-            ...state.expenses.map((exp) => Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ListTile(
-                    leading: const CircleAvatar(
-                      backgroundColor: AppColors.surfaceContainerHigh,
-                      child: Icon(Icons.receipt, color: AppColors.primary, size: 20),
-                    ),
-                    title: Text(exp.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                    subtitle: Text('${exp.category} • ${exp.date.hour}:${exp.date.minute.toString().padLeft(2, '0')}'),
-                    trailing: Text(
-                      exp.amount.format(),
-                      style: AppTypography.labelLg.copyWith(fontWeight: FontWeight.w700, color: AppColors.error),
-                    ),
+            if (state.expenses.isEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.outlineVariant, width: 0.5),
+                ),
+                child: const Center(
+                  child: Column(
+                    children: [
+                      Icon(Icons.receipt_long_outlined, size: 36, color: AppColors.outline),
+                      SizedBox(height: 8),
+                      Text(
+                        'No operating expenses recorded today',
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.onSurfaceVariant),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'আজ কোনো দোকান খরচ রেকর্ড করা হয়নি',
+                        style: TextStyle(fontSize: 11, color: AppColors.outline),
+                      ),
+                    ],
                   ),
-                )),
+                ),
+              )
+            else
+              ...state.expenses.map((exp) => Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      leading: const CircleAvatar(
+                        backgroundColor: AppColors.surfaceContainerHigh,
+                        child: Icon(Icons.receipt, color: AppColors.primary, size: 20),
+                      ),
+                      title: Text(exp.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                      subtitle: Text('${exp.category} • ${exp.date.hour}:${exp.date.minute.toString().padLeft(2, '0')}'),
+                      trailing: Text(
+                        exp.amount.format(),
+                        style: AppTypography.labelLg.copyWith(fontWeight: FontWeight.w700, color: AppColors.error),
+                      ),
+                    ),
+                  )),
 
             const SizedBox(height: 20),
 

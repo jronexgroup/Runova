@@ -234,10 +234,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(height: 8),
 
-                  ...state.repairTickets
-                      .where((t) => t.status == RepairStatus.done)
-                      .take(2)
-                      .map((ticket) => Container(
+                  if (state.repairTickets.where((t) => t.status == RepairStatus.done).isEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      alignment: Alignment.center,
+                      child: Column(
+                        children: [
+                          const Icon(Icons.check_circle_outline, size: 28, color: AppColors.outline),
+                          const SizedBox(height: 6),
+                          Text(
+                            'All caught up! No repairs awaiting delivery',
+                            style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            'ডেলিভারির জন্য কোনো মেরামত কাজ অপেক্ষমাণ নেই',
+                            style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    ...state.repairTickets
+                        .where((t) => t.status == RepairStatus.done)
+                        .take(2)
+                        .map((ticket) => Container(
                             margin: const EdgeInsets.only(bottom: 8),
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(

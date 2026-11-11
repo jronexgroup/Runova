@@ -219,7 +219,28 @@ class _PrintPosScreenState extends State<PrintPosScreen> {
                     primaryStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 10),
-                  ...state.printTransactions.take(5).map((txn) => Container(
+                  if (state.printTransactions.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      alignment: Alignment.center,
+                      child: Column(
+                        children: [
+                          const Icon(Icons.receipt_long_outlined, size: 28, color: AppColors.outline),
+                          const SizedBox(height: 6),
+                          Text(
+                            'No receipts generated yet today',
+                            style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            'আজ এখনও কোনো প্রিন্ট বা জেরক্স রসিদ তৈরি হয়নি',
+                            style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    ...state.printTransactions.take(5).map((txn) => Container(
                         margin: const EdgeInsets.only(bottom: 8),
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
