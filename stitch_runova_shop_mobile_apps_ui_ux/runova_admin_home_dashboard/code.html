@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#faf8ff;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-tertiary": "#ffffff", "on-tertiary-container": "#5bcf9e", "on-secondary": "#ffffff", "on-surface": "#131b2e", "on-primary": "#ffffff", "on-tertiary-fixed-variant": "#005137", "on-secondary-fixed-variant": "#6e3900", "on-error": "#ffffff", "primary-fixed-dim": "#b8c4ff", "inverse-on-surface": "#eef0ff", "surface-container-low": "#f2f3ff", "primary": "#00288e", "surface-dim": "#d2d9f4", "outline-variant": "#c4c5d5", "surface-container-lowest": "#ffffff", "surface": "#faf8ff", "on-background": "#131b2e", "outline": "#757684", "on-primary-fixed": "#001453", "tertiary": "#003d28", "on-surface-variant": "#444653", "tertiary-container": "#00563a", "inverse-primary": "#b8c4ff", "on-secondary-fixed": "#2f1500", "inverse-surface": "#283044", "on-secondary-container": "#663500", "on-primary-container": "#a8b8ff", "tertiary-fixed-dim": "#68dba9", "secondary-container": "#fe932c", "secondary-fixed": "#ffdcc3", "surface-container-high": "#e2e7ff", "surface-container": "#eaedff", "error-container": "#ffdad6", "on-primary-fixed-variant": "#173bab", "surface-tint": "#3755c3", "primary-container": "#1e40af", "primary-fixed": "#dde1ff", "error": "#ba1a1a", "on-error-container": "#93000a", "background": "#faf8ff", "surface-container-highest": "#dae2fd", "on-tertiary-fixed": "#002114", "surface-bright": "#faf8ff", "surface-variant": "#dae2fd", "secondary-fixed-dim": "#ffb77d", "secondary": "#904d00", "tertiary-fixed": "#85f8c4" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-sm": "0.5rem", "space-md": "0.75rem", "gutter": "1rem", "space-xl": "2rem", "gutter-tablet": "1.25rem", "space-lg": "1.25rem", "space-xs": "0.25rem", "margin": "1rem", "margin-tablet": "1.5rem" }, fontFamily: { "label-md": ["Inter"], "display-numeric": ["Inter"], "body-sm": ["Inter"], "numeric-keypad": ["Inter"], "body-lg": ["Inter"], "display-numeric-mobile": ["Inter"], "headline-lg-mobile": ["Inter"], "label-secondary-bilingual": ["Inter"], "headline-lg": ["Inter"], "label-lg": ["Inter"], "body-md": ["Inter"], "headline-sm": ["Inter"], "headline-md": ["Inter"] }, fontSize: { "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }], "display-numeric": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "numeric-keypad": ["24px", { "lineHeight": "32px", "fontWeight": "600" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "display-numeric-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "headline-lg-mobile": ["22px", { "lineHeight": "28px", "letterSpacing": "0em", "fontWeight": "700" }], "label-secondary-bilingual": ["11px", { "lineHeight": "14px", "fontWeight": "500" }], "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "headline-sm": ["16px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }] } } } }</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md text-body-md flex flex-col min-h-screen"><header class="fixed top-0 inset-x-0 z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-safe"><div class="h-16 px-gutter flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><img alt="Runova Shop Logo" class="h-8 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDipylO1FOmdF-jt6N2v7nXoY-zWC-JiK1eN8QZKpU8-vRtv-BONsXJvyPrTmlKj96feU_XKcrgBa8iOhaSdB7qCGolnsHQtXZxh3Pjwfummaefb1gefvr9F8CayAplIXO-ZRYgZNu4otH-KsOznMp4aroR08eh586cgajiRyizGcd8Yyqms9Gl3xTzZWh3phKYRk4gZah-0NuKbqpg58igUeA23I0cwe_XSo1sfWMG"/><div class="flex flex-col min-w-0"><div class="flex items-center gap-space-xs"><span class="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight truncate">Runova</span><span class="px-1.5 py-0.5 rounded bg-tertiary-container text-on-tertiary font-label-md text-[10px] uppercase font-bold tracking-wide flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-tertiary-fixed-dim animate-pulse"></span>Live</span></div><span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-surface-variant truncate">Kolkata Hub • কলকাতা হাব</span></div></div><div class="flex items-center gap-space-xs flex-shrink-0"><span class="hidden font-label-md text-label-md text-primary font-bold">Home</span><button aria-label="Notifications" class="w-11 h-11 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors relative"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-error"></span></button><div class="flex items-center pl-space-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-surface-container-high" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZ_YOLb0JAxkMpGYAWRY0-gwDZYqCDZ5VVqlJpWt7NCQF5PBAP3szJFmssW49xkyNQ6WBHIxGSXh8BU38PT8JSs3epBkfLgdsuQQjnSKFSnRpx5I5tyGj_TMXns2KXNzqSNxboNjBAoKBdvu4z68fiGZP7FnoBgfN4gwJKc3o0OiuuhDLwHr-n4Mj-pqIRNpEcNfyIwoR5CBPyEeW9wHBWvyPHwlH0cKC7gshqneXz"/></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-20 bg-surface"><div class="flex flex-col w-full pb-6 px-margin gap-space-md">
+<!-- 1. Top Shift & Date Status Banner -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-10 h-10 rounded-lg bg-tertiary-container text-on-tertiary flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[20px]">storefront</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="font-headline-sm text-headline-sm text-on-surface">Today, 24 Oct</span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-md text-label-md">
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim animate-pulse"></span>
+            Counter 1 Open
+          </span>
+</div>
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-surface-variant truncate">আজকের শিফট • কাউন্টার ১ চালু আছে</span>
+</div>
+</div>
+<button aria-label="Switch Counter or End Shift" class="px-space-sm py-1.5 rounded-lg bg-surface-container text-primary font-label-md text-label-md flex items-center gap-1 hover:bg-surface-container-high transition-colors flex-shrink-0" id="shift-toggle-btn">
+<span class="material-symbols-outlined text-[18px]">sync_alt</span>
+<span class="hidden sm:inline">Shift</span>
+</button>
+</div>
+<!-- Cash vs UPI Split Pill Banner -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-primary">account_balance_wallet</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Tender Split</span>
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-surface-variant">• নগদ ও ইউপিআই অনুপাত</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface font-bold">₹18,450</span>
+</div>
+<!-- Visual Progress Ratio -->
+<div class="w-full h-3 rounded-full bg-surface-container flex overflow-hidden">
+<div class="h-full bg-secondary-container rounded-l-full transition-all duration-500" style="width: 49.8%"></div>
+<div class="h-full bg-primary-container rounded-r-full transition-all duration-500" style="width: 50.2%"></div>
+</div>
+<div class="flex items-center justify-between text-on-surface">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary-container"></span>
+<span class="font-label-md text-label-md">Cash ড্রয়ার: <strong class="text-on-surface">₹9,200</strong></span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
+<span class="font-label-md text-label-md">UPI কিউআর: <strong class="text-on-surface">₹9,250</strong></span>
+</div>
+</div>
+</div>
+<!-- 2. High-Contrast KPI Metric Cards in INR -->
+<div class="flex flex-col gap-space-sm">
+<!-- Hero Sales Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-surface-variant uppercase tracking-wider block">Today's Total Sales</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">আজকের মোট বিক্রি</span>
+</div>
+<span class="inline-flex items-center gap-0.5 px-2 py-1 rounded bg-tertiary-container text-on-tertiary font-label-md text-label-md">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span>
+          +14% vs kal
+        </span>
+</div>
+<div class="flex items-baseline gap-1">
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface-variant">₹</span>
+<span class="font-display-numeric-mobile text-display-numeric-mobile text-primary tracking-tight">18,450</span>
+</div>
+<!-- Segment breakdown pills -->
+<div class="grid grid-cols-3 gap-1.5 pt-1">
+<div class="bg-surface-container-low rounded-lg p-2 flex flex-col">
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-surface-variant">Retail • খুচরা</span>
+<span class="font-label-lg text-label-lg text-on-surface font-bold">₹11,200</span>
+</div>
+<div class="bg-surface-container-low rounded-lg p-2 flex flex-col">
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-surface-variant">Print • প্রিন্ট</span>
+<span class="font-label-lg text-label-lg text-on-surface font-bold">₹2,450</span>
+</div>
+<div class="bg-surface-container-low rounded-lg p-2 flex flex-col">
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-surface-variant">Repair • মেরামত</span>
+<span class="font-label-lg text-label-lg text-on-surface font-bold">₹4,800</span>
+</div>
+</div>
+</div>
+<!-- Dual Metric Cards: Expenses & Net Profit -->
+<div class="grid grid-cols-2 gap-space-sm">
+<!-- Expenses Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-surface-variant uppercase">Expenses • খরচ</span>
+<span class="w-6 h-6 rounded-full bg-error-container text-on-error-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px]">trending_down</span>
+</span>
+</div>
+<div class="flex items-baseline gap-0.5">
+<span class="font-headline-sm text-headline-sm text-error">₹</span>
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-error font-bold">2,100</span>
+</div>
+</div>
+<div class="pt-2 flex flex-col gap-0.5">
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-surface-variant truncate">Supplies: ₹1,500</span>
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-surface-variant truncate">Tea/Misc: ₹600</span>
+</div>
+</div>
+<!-- Net Profit Highlight Card (Emerald Green Theme) -->
+<div class="bg-tertiary-container text-on-tertiary rounded-xl p-space-md shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="absolute -right-3 -bottom-3 opacity-15 pointer-events-none">
+<span class="material-symbols-outlined text-[72px]">savings</span>
+</div>
+<div>
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-tertiary-container uppercase font-semibold">Net Profit • নিট লাভ</span>
+<span class="w-6 h-6 rounded-full bg-tertiary text-on-tertiary flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px]">auto_graph</span>
+</span>
+</div>
+<div class="flex items-baseline gap-0.5">
+<span class="font-headline-sm text-headline-sm text-tertiary-fixed">₹</span>
+<span class="font-display-numeric-mobile text-display-numeric-mobile text-on-tertiary tracking-tight font-bold">7,850</span>
+</div>
+</div>
+<div class="pt-2">
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-tertiary-container flex items-center gap-1 font-medium">
+<span class="material-symbols-outlined text-[13px]">verified</span> 42.5% Margin
+          </span>
+</div>
+</div>
+</div>
+</div>
+<!-- 3. Big Quick Action Touch Buttons (এক ক্লিকে নতুন লেনদেন) -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between px-1">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Quick Counter Actions</h2>
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-surface-variant">এক ক্লিকে নতুন লেনদেন শুরু করুন</span>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-md text-[11px] font-bold">Fast POS</span>
+</div>
+<div class="grid grid-cols-2 gap-space-sm">
+<!-- Quick Xerox Button with dynamic counter pop -->
+<button class="bg-surface-container-lowest hover:bg-surface-container-low active:scale-[0.98] transition-all rounded-xl p-space-md shadow-sm flex flex-col text-left justify-between min-h-[96px] relative overflow-hidden group" id="quick-xerox-btn">
+<div class="flex items-center justify-between w-full">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[24px]">content_copy</span>
+</div>
+<div class="flex items-center gap-1 bg-surface-container px-2 py-0.5 rounded font-label-md text-[11px] text-on-surface">
+<span>₹3 B&W</span>
+<span class="text-outline">/</span>
+<span class="text-secondary font-bold">₹5 Clr</span>
+</div>
+</div>
+<div class="mt-2">
+<span class="font-label-lg text-label-lg text-on-surface font-bold block">New Xerox</span>
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-surface-variant">ফটোকপি ও ডাবল সাইড</span>
+</div>
+</button>
+<!-- Fast Retail Sale Button -->
+<button class="bg-primary-container hover:bg-primary active:scale-[0.98] transition-all text-on-primary rounded-xl p-space-md shadow-sm flex flex-col text-left justify-between min-h-[96px]">
+<div class="flex items-center justify-between w-full">
+<div class="w-10 h-10 rounded-lg bg-on-primary/10 text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[24px]">barcode_scanner</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-on-primary/20 text-on-primary font-label-md text-[10px] tracking-wide font-bold">SCAN</span>
+</div>
+<div class="mt-2">
+<span class="font-label-lg text-label-lg text-on-primary font-bold block">Fast Sale</span>
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-primary-fixed-dim">দ্রুত খুচরা বিক্রি (বারকোড)</span>
+</div>
+</button>
+<!-- New Repair Intake Button -->
+<button class="bg-surface-container-lowest hover:bg-surface-container-low active:scale-[0.98] transition-all rounded-xl p-space-md shadow-sm flex flex-col text-left justify-between min-h-[96px]">
+<div class="flex items-center justify-between w-full">
+<div class="w-10 h-10 rounded-lg bg-secondary-fixed text-secondary flex items-center justify-center">
+<span class="material-symbols-outlined text-[24px]">phonelink_setup</span>
+</div>
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-secondary-container/20 text-secondary font-label-md text-[11px] font-bold">
+            3 In Queue
+          </span>
+</div>
+<div class="mt-2">
+<span class="font-label-lg text-label-lg text-on-surface font-bold block">Repair Intake</span>
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-surface-variant">নতুন মেরামত গ্রহণ টিকিট</span>
+</div>
+</button>
+<!-- Record Expense Button -->
+<button class="bg-surface-container-lowest hover:bg-surface-container-low active:scale-[0.98] transition-all rounded-xl p-space-md shadow-sm flex flex-col text-left justify-between min-h-[96px]">
+<div class="flex items-center justify-between w-full">
+<div class="w-10 h-10 rounded-lg bg-error-container text-on-error-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[24px]">receipt_long</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-md text-[11px]">Tea/Stock</span>
+</div>
+<div class="mt-2">
+<span class="font-label-lg text-label-lg text-on-surface font-bold block">Record Expense</span>
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-surface-variant">দোকানের খরচ নোট করুন</span>
+</div>
+</button>
+</div>
+</div>
+<!-- Interactive Xerox Quick Counter Modal Tray (Hidden by default, toggled via JS) -->
+<div class="hidden bg-surface-container-high rounded-xl p-space-md shadow-md flex flex-col gap-space-sm transition-all duration-300" id="xerox-tray">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">bolt</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Quick Copy Counter • দ্রুত ফটোকপি</span>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant" id="close-xerox-tray">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+<div class="grid grid-cols-2 gap-space-sm">
+<div class="bg-surface-container-lowest p-space-sm rounded-lg flex items-center justify-between">
+<div>
+<span class="font-label-md text-label-md text-on-surface block">B&W Copies</span>
+<span class="font-label-secondary-bilingual text-[10px] text-on-surface-variant">₹3 / পাতা</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="w-8 h-8 rounded bg-surface-container flex items-center justify-center font-bold text-on-surface active:bg-surface-dim" id="bw-minus">-</button>
+<span class="font-label-lg text-label-lg text-on-surface w-6 text-center font-bold" id="bw-count">1</span>
+<button class="w-8 h-8 rounded bg-surface-container flex items-center justify-center font-bold text-on-surface active:bg-surface-dim" id="bw-plus">+</button>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-sm rounded-lg flex items-center justify-between">
+<div>
+<span class="font-label-md text-label-md text-on-surface block">Color Copies</span>
+<span class="font-label-secondary-bilingual text-[10px] text-on-surface-variant">₹5 / পাতা</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="w-8 h-8 rounded bg-surface-container flex items-center justify-center font-bold text-on-surface active:bg-surface-dim" id="clr-minus">-</button>
+<span class="font-label-lg text-label-lg text-on-surface w-6 text-center font-bold" id="clr-count">0</span>
+<button class="w-8 h-8 rounded bg-surface-container flex items-center justify-center font-bold text-on-surface active:bg-surface-dim" id="clr-plus">+</button>
+</div>
+</div>
+</div>
+<button class="w-full bg-primary-container text-on-primary py-2.5 rounded-lg font-label-lg text-label-lg font-bold flex items-center justify-center gap-2 shadow-sm active:scale-[0.98]" id="collect-xerox-btn">
+<span class="material-symbols-outlined text-[18px]">payments</span>
+<span>Collect <span id="xerox-total">₹3</span> • পেমেন্ট নিন</span>
+</button>
+</div>
+<!-- 4. Visual Media Context: Busy Shop Counter Workflow -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">store</span>
+<div>
+<h3 class="font-label-lg text-label-lg text-on-surface font-bold">Workbench & Counter Hub</h3>
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-surface-variant">কাউন্টার ও মেরামতের অবস্থা</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded bg-tertiary-fixed-dim text-on-tertiary-fixed font-label-md text-[11px] font-bold">Synced</span>
+</div>
+<!-- Workshop overview visual placeholder -->
+<div class="relative w-full h-36 rounded-lg overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Busy high-tech mobile repair and print shop counter in Kolkata India, tidy workbench with digital soldering iron, thermal paper receipt printer, laptops, neatly stacked paper reams, warm bright ambient lighting, high quality industrial clarity" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoa1peImkehfAAaVqUX99rNAK4GWI98jgtAq7orzJBPR8m1z_wu6qZzCSncyDqpov1XrqARu49CDtT_qahUBDjchv1ECH4459Xs7gpxfXKNYntbB9RGPC-o0J4Q-VqX16WVYzONA74cD9ThKG7J8umy9sIKAWfigBJgmYMxxckZXdfCkPVHa6PBFsTRDXMMGtH8ZT-LlkQXuE7W1tgaKhCE0y4bA2qu9cIwJjEjfin"/>
+<div class="absolute inset-0 bg-gradient-to-t from-on-surface/80 via-transparent to-transparent flex items-end p-space-md">
+<div class="flex items-center justify-between w-full text-surface">
+<div>
+<span class="font-label-md text-label-md text-surface block font-semibold">Toner & Spares Inventory</span>
+<span class="font-label-secondary-bilingual text-[11px] text-surface-container-highest">A4 Paper 8 Reams left • Spares normal</span>
+</div>
+<span class="material-symbols-outlined text-[20px] text-surface-container-highest">check_circle</span>
+</div>
+</div>
+</div>
+</div>
+<!-- 5. Live Counter Activity Stream -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Live Activity Stream</h3>
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-surface-variant">লাইভ লেনদেন ও চলমান কাজ</span>
+</div>
+<button class="text-primary font-label-md text-label-md flex items-center gap-0.5 hover:underline">
+<span>সব দেখুন</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+<div class="flex flex-col gap-2 pt-1">
+<!-- Item 1: Print -->
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded-lg bg-surface-container text-primary flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">print</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-on-surface font-semibold truncate">Print 14 pgs B&W</span>
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-surface-variant truncate">আধার কার্ড প্রিন্ট • UPI Scan</span>
+</div>
+</div>
+<div class="text-right flex-shrink-0 ml-2">
+<span class="font-label-lg text-label-lg text-tertiary-container font-bold block">+₹70</span>
+<span class="font-label-secondary-bilingual text-[10px] text-on-surface-variant">2 min ago</span>
+</div>
+</div>
+<!-- Item 2: Repair Status Update -->
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded-lg bg-secondary-fixed text-secondary flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">devices</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="font-label-md text-label-md text-on-surface font-semibold truncate">Samsung M31 Screen Done</span>
+<span class="px-1.5 py-0.2 rounded bg-tertiary-container text-on-tertiary font-label-md text-[9px] uppercase font-bold">Ready</span>
+</div>
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-surface-variant truncate">গ্রাহক: রাজীব দাস • ডেলিভারির জন্য তৈরি</span>
+</div>
+</div>
+<div class="text-right flex-shrink-0 ml-2">
+<span class="font-label-lg text-label-lg text-on-surface font-bold block">₹2,800 Due</span>
+<span class="font-label-secondary-bilingual text-[10px] text-on-surface-variant">11 min ago</span>
+</div>
+</div>
+<!-- Item 3: Expense entry -->
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded-lg bg-error-container text-on-error-container flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">inventory_2</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-on-surface font-semibold truncate">HP Laser Toner refilled</span>
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-surface-variant truncate">দোকানের কালি রিফিল • Cash Paid</span>
+</div>
+</div>
+<div class="text-right flex-shrink-0 ml-2">
+<span class="font-label-lg text-label-lg text-error font-bold block">-₹450</span>
+<span class="font-label-secondary-bilingual text-[10px] text-on-surface-variant">24 min ago</span>
+</div>
+</div>
+<!-- Item 4: Retail Item Scan -->
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded-lg bg-surface-container-high text-primary flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">shopping_bag</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-on-surface font-semibold truncate">Type-C Fast Cable + OTG</span>
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-surface-variant truncate">খুচরা বিক্রি • Cash</span>
+</div>
+</div>
+<div class="text-right flex-shrink-0 ml-2">
+<span class="font-label-lg text-label-lg text-tertiary-container font-bold block">+₹320</span>
+<span class="font-label-secondary-bilingual text-[10px] text-on-surface-variant">42 min ago</span>
+</div>
+</div>
+</div>
+</div>
+<!-- End of Day Shift Close Prompt -->
+<div class="bg-surface-container-high rounded-xl p-space-md flex items-center justify-between">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-primary text-[24px]">lock_clock</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg text-on-surface font-bold">End Shift Audit</span>
+<span class="font-label-secondary-bilingual text-label-secondary-bilingual text-on-surface-variant">দিনের হিসাব মিলিয়ে ক্যাশ ক্লোজ করুন</span>
+</div>
+</div>
+<button class="px-3 py-1.5 rounded-lg bg-primary text-on-primary font-label-md text-label-md font-bold hover:bg-primary-container active:scale-95 transition-all flex-shrink-0">
+      Audit Shift
+    </button>
+</div>
+</div>
+<script>
+  (function initDashboardInteractions() {
+    const xeroxBtn = document.getElementById('quick-xerox-btn');
+    const xeroxTray = document.getElementById('xerox-tray');
+    const closeTray = document.getElementById('close-xerox-tray');
+    const bwPlus = document.getElementById('bw-plus');
+    const bwMinus = document.getElementById('bw-minus');
+    const clrPlus = document.getElementById('clr-plus');
+    const clrMinus = document.getElementById('clr-minus');
+    const bwCountEl = document.getElementById('bw-count');
+    const clrCountEl = document.getElementById('clr-count');
+    const xeroxTotalEl = document.getElementById('xerox-total');
+    const collectBtn = document.getElementById('collect-xerox-btn');
+
+    let bw = 1;
+    let clr = 0;
+
+    function updateTotal() {
+      const sum = (bw * 3) + (clr * 5);
+      if (xeroxTotalEl) xeroxTotalEl.textContent = '₹' + sum;
+      if (bwCountEl) bwCountEl.textContent = bw;
+      if (clrCountEl) clrCountEl.textContent = clr;
+    }
+
+    if (xeroxBtn && xeroxTray) {
+      xeroxBtn.addEventListener('click', () => {
+        xeroxTray.classList.toggle('hidden');
+        if (!xeroxTray.classList.contains('hidden')) {
+          xeroxTray.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    }
+
+    if (closeTray && xeroxTray) {
+      closeTray.addEventListener('click', () => {
+        xeroxTray.classList.add('hidden');
+      });
+    }
+
+    if (bwPlus) bwPlus.addEventListener('click', () => { bw++; updateTotal(); });
+    if (bwMinus) bwMinus.addEventListener('click', () => { if (bw > 0) bw--; updateTotal(); });
+    if (clrPlus) clrPlus.addEventListener('click', () => { clr++; updateTotal(); });
+    if (clrMinus) clrMinus.addEventListener('click', () => { if (clr > 0) clr--; updateTotal(); });
+
+    if (collectBtn && xeroxTray) {
+      collectBtn.addEventListener('click', () => {
+        const sum = (bw * 3) + (clr * 5);
+        if (sum > 0) {
+          collectBtn.textContent = 'Transaction Recorded! ✓';
+          collectBtn.classList.remove('bg-primary-container');
+          collectBtn.classList.add('bg-tertiary-container');
+          setTimeout(() => {
+            xeroxTray.classList.add('hidden');
+            collectBtn.classList.remove('bg-tertiary-container');
+            collectBtn.classList.add('bg-primary-container');
+            collectBtn.innerHTML = '<span class="material-symbols-outlined text-[18px]">payments</span><span>Collect <span id="xerox-total">₹3</span> • পেমেন্ট নিন</span>';
+            bw = 1;
+            clr = 0;
+            updateTotal();
+          }, 1100);
+        }
+      });
+    }
+  })();
+</script></main><nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-surface-container-lowest/95 backdrop-blur-xl shadow-[0_-1px_8px_rgba(0,0,0,0.05)]" data-active-classes="text-primary-container bg-surface-container-high/60"><div class="flex items-center justify-around h-16 px-space-xs"><a aria-current="page" class="flex-1 flex flex-col items-center justify-center h-14 rounded-lg transition-colors text-primary-container bg-surface-container-high/60" data-path="home" href="#"><span class="material-symbols-outlined text-[22px]">dashboard</span><span class="font-label-md text-[11px] leading-tight mt-0.5">Home</span><span class="font-label-secondary-bilingual text-[9px] leading-none text-on-surface-variant/80">হোম</span></a><a class="flex-1 flex flex-col items-center justify-center h-14 rounded-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="retail" href="#"><span class="material-symbols-outlined text-[22px]">point_of_sale</span><span class="font-label-md text-[11px] leading-tight mt-0.5">Retail</span><span class="font-label-secondary-bilingual text-[9px] leading-none text-on-surface-variant/80">খুচরা</span></a><a class="flex-1 flex flex-col items-center justify-center h-14 rounded-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="print" href="#"><span class="material-symbols-outlined text-[22px]">print</span><span class="font-label-md text-[11px] leading-tight mt-0.5">Print</span><span class="font-label-secondary-bilingual text-[9px] leading-none text-on-surface-variant/80">প্রিন্ট</span></a><a class="flex-1 flex flex-col items-center justify-center h-14 rounded-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="repairs" href="#"><span class="material-symbols-outlined text-[22px]">build</span><span class="font-label-md text-[11px] leading-tight mt-0.5">Repairs</span><span class="font-label-secondary-bilingual text-[9px] leading-none text-on-surface-variant/80">মেরামত</span></a><a class="flex-1 flex flex-col items-center justify-center h-14 rounded-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="more" href="#"><span class="material-symbols-outlined text-[22px]">widgets</span><span class="font-label-md text-[11px] leading-tight mt-0.5">More</span><span class="font-label-secondary-bilingual text-[9px] leading-none text-on-surface-variant/80">আরো</span></a></div></nav></body></html>
