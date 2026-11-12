@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'data/auth/auth_service.dart';
 import 'data/remote/firebase_manager.dart';
+import 'screens/auth/auth_screen.dart';
 import 'screens/main_navigation_screen.dart';
 import 'state/shop_state.dart';
 import 'theme/app_theme.dart';
@@ -10,7 +12,8 @@ void main() async {
   // 1. Initialize Firebase (gracefully runs offline-first if credentials not yet dropped)
   await FirebaseManager.instance.initialize();
 
-  // 2. Initialize Local SQLite and load state
+  // 2. Initialize Session and Local SQLite State
+  await AuthService.instance.init();
   await ShopState.instance.init();
 
   runApp(const RunovaAdminApp());
@@ -25,7 +28,15 @@ class RunovaAdminApp extends StatelessWidget {
       title: 'Runova Shop Admin',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const MainNavigationScreen(),
+      home: AnimatedBuilder(
+        animation: AuthService.instance,
+        builder: (context, _) {
+          if (AuthService.instance.isAuthenticated) {
+            return const MainNavigationScreen();
+          }
+          return const AuthScreen();
+        },
+      ),
     );
   }
 }

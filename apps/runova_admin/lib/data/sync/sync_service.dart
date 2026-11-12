@@ -41,10 +41,27 @@ class SyncService {
         final payload = jsonDecode(task['payload_json'] as String) as Map<String, dynamic>;
 
         try {
-          await firestore
-              .collection(collectionName)
-              .doc(docId)
-              .set(payload, SetOptions(merge: true));
+          if (collectionName == 'shops') {
+            await firestore.collection('shops').doc(docId).set(payload, SetOptions(merge: true));
+          } else if (collectionName == 'users') {
+            await firestore.collection('users').doc(docId).set(payload, SetOptions(merge: true));
+          } else {
+            // Scope multi-tenant data under shops/{shopId}/{collection}
+            final shopId = payload['shop_id'] as String? ?? '';
+            if (shopId.isNotEmpty) {
+              await firestore
+                  .collection('shops')
+                  .doc(shopId)
+                  .collection(collectionName)
+                  .doc(docId)
+                  .set(payload, SetOptions(merge: true));
+            } else {
+              await firestore
+                  .collection(collectionName)
+                  .doc(docId)
+                  .set(payload, SetOptions(merge: true));
+            }
+          }
 
           await db.markSyncTaskDone(taskId);
           debugPrint('[SyncService] Synced $collectionName/$docId to Firestore ✓');

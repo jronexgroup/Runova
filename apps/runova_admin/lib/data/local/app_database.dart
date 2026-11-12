@@ -180,6 +180,46 @@ class AppDatabase {
         status TEXT NOT NULL
       )
     ''');
+
+    // 11. Active App Session (Offline Auth State)
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS app_session (
+        id TEXT PRIMARY KEY,
+        shop_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        role TEXT NOT NULL,
+        display_name TEXT NOT NULL,
+        shop_name TEXT NOT NULL,
+        worker_code TEXT,
+        last_login_at INTEGER NOT NULL
+      )
+    ''');
+
+    // 12. Provisioned Workers
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS workers (
+        id TEXT PRIMARY KEY,
+        shop_id TEXT NOT NULL,
+        worker_code TEXT NOT NULL,
+        name TEXT NOT NULL,
+        pin_hash TEXT NOT NULL,
+        active INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    ''');
+
+    // 13. Shop Profile Entity
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS shops (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        name_bengali TEXT,
+        address TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        owner_uid TEXT NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    ''');
   }
 
   // --- Products CRUD ---
@@ -435,6 +475,88 @@ class AppDatabase {
     };
     await db.insert('invoices', row);
     await _enqueueSync('invoices', invoice.id, 'upsert', row);
+  }
+
+  // --- Auth Session & Multi-tenant Profile ---
+  Future<void> saveSession(AppSession session) async {
+    final db = await database;
+    await db.insert(
+      'app_session',
+      {
+        'id': 'current_session',
+        'shop_id': session.shopId,
+        'user_id': session.userId,
+        'role': session.role.name,
+        'display_name': session.displayName,
+        'shop_name': session.shopName,
+        'worker_code': session.workerCode,
+        'last_login_at': session.lastLoginAt.millisecondsSinceEpoch,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<AppSession?> getSession() async {
+    final db = await database;
+    final rows = await db.query(
+      'app_session',
+      where: 'id = ?',
+      whereArgs: ['current_session'],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return AppSession.fromMap(rows.first);
+  }
+
+  Future<void> clearSession() async {
+    final db = await database;
+    await db.delete('app_session', where: 'id = ?', whereArgs: ['current_session']);
+  }
+
+  // --- Shop Profile ---
+  Future<void> saveShop(ShopInfo shop) async {
+    final db = await database;
+    final row = {
+      'id': shop.id,
+      'name': shop.name,
+      'name_bengali': shop.nameBengali,
+      'address': shop.address,
+      'phone': shop.phone,
+      'owner_uid': shop.ownerUid,
+      'created_at': shop.createdAt.millisecondsSinceEpoch,
+    };
+    await db.insert('shops', row, conflictAlgorithm: ConflictAlgorithm.replace);
+    await _enqueueSync('shops', shop.id, 'upsert', row);
+  }
+
+  Future<ShopInfo?> getShop(String shopId) async {
+    final db = await database;
+    final rows = await db.query('shops', where: 'id = ?', whereArgs: [shopId], limit: 1);
+    if (rows.isEmpty) return null;
+    return ShopInfo.fromMap(rows.first);
+  }
+
+  // --- Workers CRUD ---
+  Future<List<WorkerAccount>> getWorkers({String? shopId}) async {
+    final db = await database;
+    final rows = shopId != null
+        ? await db.query('workers', where: 'shop_id = ?', whereArgs: [shopId], orderBy: 'name ASC')
+        : await db.query('workers', orderBy: 'name ASC');
+
+    return rows.map((r) => WorkerAccount.fromMap(r)).toList();
+  }
+
+  Future<void> upsertWorker(WorkerAccount worker) async {
+    final db = await database;
+    final row = worker.toMap();
+    await db.insert('workers', row, conflictAlgorithm: ConflictAlgorithm.replace);
+    await _enqueueSync('workers', worker.id, 'upsert', row);
+  }
+
+  Future<void> deleteWorker(String workerId) async {
+    final db = await database;
+    await db.delete('workers', where: 'id = ?', whereArgs: [workerId]);
+    await _enqueueSync('workers', workerId, 'delete', {'id': workerId});
   }
 
   // --- High Priority Sync Queue ---
