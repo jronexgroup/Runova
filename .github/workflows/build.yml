@@ -1,0 +1,61 @@
+name: Build Runova Admin APK
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Test & Build Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java (JDK 17)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Verify Environment
+        run: |
+          flutter --version
+          dart --version
+
+      - name: Test Core Domain Engine (runova_core)
+        run: |
+          cd packages/runova_core
+          dart pub get
+          dart test
+
+      - name: Analyze & Test Admin App (runova_admin)
+        run: |
+          cd apps/runova_admin
+          flutter pub get
+          flutter analyze
+          flutter test
+
+      - name: Build Release APK
+        run: |
+          cd apps/runova_admin
+          flutter build apk --release
+
+      - name: Upload Release APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: runova-admin-release-apk
+          path: apps/runova_admin/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
