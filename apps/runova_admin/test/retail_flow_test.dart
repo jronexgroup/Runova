@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:runova_core/runova_core.dart';
-import 'package:runova_admin/screens/retail/retail_screen.dart';
 import 'package:runova_admin/screens/retail/add_inventory_screen.dart';
 import 'package:runova_admin/data/local/app_database.dart';
 import 'package:runova_admin/state/shop_state.dart';
