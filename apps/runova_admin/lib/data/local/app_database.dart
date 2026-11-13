@@ -536,6 +536,14 @@ class AppDatabase {
     return ShopInfo.fromMap(rows.first);
   }
 
+  /// Returns the most recently created or registered Shop from local SQLite.
+  Future<ShopInfo?> getPrimaryShop() async {
+    final db = await database;
+    final rows = await db.query('shops', orderBy: 'created_at DESC', limit: 1);
+    if (rows.isEmpty) return null;
+    return ShopInfo.fromMap(rows.first);
+  }
+
   // --- Workers CRUD ---
   Future<List<WorkerAccount>> getWorkers({String? shopId}) async {
     final db = await database;

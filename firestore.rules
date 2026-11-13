@@ -7,6 +7,12 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Top-level user profiles
+    match /users/{userId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Top-level shops and nested collections
     match /shops/{shopId} {
       allow read, write: if isAuthenticated();
 

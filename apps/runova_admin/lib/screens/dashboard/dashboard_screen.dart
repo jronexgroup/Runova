@@ -265,55 +265,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 14),
-
-            // 6. End Shift Close Prompt
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.lock_clock, color: AppColors.primary, size: 24),
-                      const SizedBox(width: 10),
-                      const BilingualText(
-                        primary: 'End Shift Audit',
-                        secondary: 'দিনের হিসাব মিলিয়ে ক্যাশ ক্লোজ করুন',
-                        primaryStyle: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.onSurface,
-                        ),
-                      ),
-                    ],
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Shift closing summary generated: Total Tender ${totalSales.format()}',
-                          ),
-                        ),
-                      );
-                    },
-                    child: const Text('Audit Shift', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 80),
           ],
         );
       },

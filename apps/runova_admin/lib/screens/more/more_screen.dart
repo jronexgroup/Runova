@@ -223,9 +223,9 @@ class _MoreScreenState extends State<MoreScreen> {
                           color: AppColors.tertiaryContainer.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: Text(
-                          '${state.counterName} ACTIVE',
-                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.tertiaryContainer),
+                        child: const Text(
+                          'ACTIVE',
+                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.tertiaryContainer),
                         ),
                       ),
                     ],
@@ -455,22 +455,27 @@ class _MoreScreenState extends State<MoreScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            AuthService.instance.activeShopName.isNotEmpty
-                                ? AuthService.instance.activeShopName
-                                : 'Runova Shop',
-                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Shop ID: ${AuthService.instance.activeShopId}',
-                            style: const TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
-                          ),
-                        ],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AuthService.instance.activeShopName.isNotEmpty
+                                  ? AuthService.instance.activeShopName
+                                  : 'Runova Shop',
+                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Shop ID: ${AuthService.instance.activeShopId}',
+                              style: const TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.error,
@@ -484,7 +489,10 @@ class _MoreScreenState extends State<MoreScreen> {
                     ],
                   ),
                   const Divider(height: 20),
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -497,7 +505,6 @@ class _MoreScreenState extends State<MoreScreen> {
                           style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
                         ),
                       ),
-                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
@@ -511,7 +518,7 @@ class _MoreScreenState extends State<MoreScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 80),
           ],
         );
       },

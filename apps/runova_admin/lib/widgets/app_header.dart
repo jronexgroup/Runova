@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import '../data/auth/auth_service.dart';
+import '../data/local/app_database.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
 /// Top App Header displaying actual Shop Name and Live indicator.
-class AppHeader extends StatelessWidget implements PreferredSizeWidget {
+class AppHeader extends StatefulWidget implements PreferredSizeWidget {
   final VoidCallback? onNotificationsTap;
   final VoidCallback? onProfileTap;
 
@@ -17,10 +18,43 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => const Size.fromHeight(60);
 
+  @override
+  State<AppHeader> createState() => _AppHeaderState();
+}
+
+class _AppHeaderState extends State<AppHeader> {
+  @override
+  void initState() {
+    super.initState();
+    _checkShopName();
+  }
+
+  @override
+  void reassemble() {
+    super.reassemble();
+    _checkShopName();
+  }
+
+  Future<void> _checkShopName() async {
+    try {
+      final active = AuthService.instance.activeShopName;
+      if (active.isEmpty || active == 'Runova Shop' || active == 'Runova') {
+        final primary = await AppDatabase.instance.getPrimaryShop();
+        if (primary != null && primary.name.isNotEmpty && mounted) {
+          AuthService.instance.refreshShop(primary);
+        }
+      }
+    } catch (_) {
+      // Graceful fallback if databaseFactory not initialized in test environments
+    }
+  }
+
   /// If shop name is long, adjusts with the first 2 words.
   String _formatShopName(String raw) {
     final trimmed = raw.trim();
-    if (trimmed.isEmpty) return 'Runova';
+    if (trimmed.isEmpty || trimmed == 'Runova Shop' || trimmed == 'Runova') {
+      return 'Runova';
+    }
     final words = trimmed.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
     if (words.length > 2) {
       return '${words[0]} ${words[1]}';
@@ -113,7 +147,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                           IconButton(
                             icon: const Icon(Icons.notifications_none, size: 22),
                             color: AppColors.onSurfaceVariant,
-                            onPressed: onNotificationsTap,
+                            onPressed: widget.onNotificationsTap,
                           ),
                           Positioned(
                             right: 12,
@@ -131,7 +165,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                       ),
                       const SizedBox(width: 4),
                       InkWell(
-                        onTap: onProfileTap,
+                        onTap: widget.onProfileTap,
                         borderRadius: BorderRadius.circular(20),
                         child: Container(
                           width: 32,

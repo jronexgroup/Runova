@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:runova_admin/widgets/app_header.dart';
 import 'package:runova_admin/data/auth/auth_service.dart';
 import 'package:runova_core/runova_core.dart';
 
 void main() {
+  sqfliteFfiInit();
+  databaseFactory = databaseFactoryFfi;
+
   tearDown(() {
     AuthService.instance.setSessionForTesting(null);
   });

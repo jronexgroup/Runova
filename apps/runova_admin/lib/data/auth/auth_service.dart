@@ -12,13 +12,46 @@ class AuthService extends ChangeNotifier {
 
   AppSession? _currentSession;
   AppSession? get currentSession => _currentSession;
+  ShopInfo? _currentShop;
+  ShopInfo? get currentShop => _currentShop;
 
   bool get isAuthenticated => _currentSession != null;
   bool get isAdmin => _currentSession?.isAdmin ?? false;
   bool get isWorker => _currentSession?.isWorker ?? false;
-  String get activeShopId => _currentSession?.shopId ?? '';
+  String get activeShopId => _currentSession?.shopId ?? _currentShop?.id ?? '';
   String get activeUserName => _currentSession?.displayName ?? '';
-  String get activeShopName => _currentSession?.shopName ?? '';
+  String get activeShopName {
+    if (_currentShop != null &&
+        _currentShop!.name.isNotEmpty &&
+        _currentShop!.name != 'Runova Shop' &&
+        _currentShop!.name != 'Runova') {
+      return _currentShop!.name;
+    }
+    if (_currentSession?.shopName != null &&
+        _currentSession!.shopName.isNotEmpty &&
+        _currentSession!.shopName != 'Runova Shop' &&
+        _currentSession!.shopName != 'Runova') {
+      return _currentSession!.shopName;
+    }
+    return _currentShop?.name ?? '';
+  }
+
+  void refreshShop(ShopInfo shop) {
+    _currentShop = shop;
+    if (_currentSession != null) {
+      _currentSession = AppSession(
+        shopId: shop.id,
+        userId: _currentSession!.userId,
+        role: _currentSession!.role,
+        displayName: _currentSession!.displayName,
+        shopName: shop.name,
+        workerCode: _currentSession!.workerCode,
+        lastLoginAt: _currentSession!.lastLoginAt,
+      );
+      AppDatabase.instance.saveSession(_currentSession!);
+    }
+    notifyListeners();
+  }
 
   @visibleForTesting
   void setSessionForTesting(AppSession? session) {
@@ -26,11 +59,35 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Restores cached session from SQLite on app startup.
+  /// Restores cached session and shop profile from SQLite on app startup.
   Future<void> init() async {
     final cached = await AppDatabase.instance.getSession();
     if (cached != null) {
       _currentSession = cached;
+      if (cached.shopId.isNotEmpty) {
+        _currentShop = await AppDatabase.instance.getShop(cached.shopId);
+      }
+      _currentShop ??= await AppDatabase.instance.getPrimaryShop();
+
+      if (_currentShop != null && _currentShop!.name.isNotEmpty) {
+        if (_currentSession!.shopName.isEmpty ||
+            _currentSession!.shopName == 'Runova Shop' ||
+            _currentSession!.shopName == 'Runova') {
+          _currentSession = AppSession(
+            shopId: _currentShop!.id,
+            userId: _currentSession!.userId,
+            role: _currentSession!.role,
+            displayName: _currentSession!.displayName,
+            shopName: _currentShop!.name,
+            workerCode: _currentSession!.workerCode,
+            lastLoginAt: _currentSession!.lastLoginAt,
+          );
+          await AppDatabase.instance.saveSession(_currentSession!);
+        }
+      }
+      notifyListeners();
+    } else {
+      _currentShop = await AppDatabase.instance.getPrimaryShop();
       notifyListeners();
     }
   }
@@ -89,6 +146,7 @@ class AuthService extends ChangeNotifier {
     );
 
     // 2. Persist locally to SQLite
+    _currentShop = shop;
     await AppDatabase.instance.saveShop(shop);
 
     // 3. Persist to Firestore if available
@@ -179,6 +237,17 @@ class AuthService extends ChangeNotifier {
         }
       } catch (e) {
         debugPrint('[AuthService] Error fetching user profile from Firestore: $e');
+      }
+    }
+
+    // SQLite fallback: retrieve local registered shop if Firestore did not supply name
+    if (shopName.isEmpty || shopName == 'Runova Shop') {
+      final localShop = (shopId.isNotEmpty ? await AppDatabase.instance.getShop(shopId) : null) ??
+                        await AppDatabase.instance.getPrimaryShop();
+      if (localShop != null && localShop.name.isNotEmpty) {
+        shopName = localShop.name;
+        if (shopId.isEmpty) shopId = localShop.id;
+        _currentShop = localShop;
       }
     }
 
