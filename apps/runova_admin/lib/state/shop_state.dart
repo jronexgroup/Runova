@@ -119,6 +119,24 @@ class ShopState extends ChangeNotifier {
     SyncService.instance.syncOutbox();
   }
 
+  Future<void> updateProductStock({required String productId, required int newStock}) async {
+    if (newStock < 0) newStock = 0;
+    await AppDatabase.instance.updateProductStock(productId, newStock);
+    final idx = products.indexWhere((p) => p.id == productId);
+    if (idx != -1) {
+      products[idx] = products[idx].copyWith(stockQuantity: newStock);
+      notifyListeners();
+    }
+    SyncService.instance.syncOutbox();
+  }
+
+  Future<void> deleteProduct(String productId) async {
+    await AppDatabase.instance.deleteProduct(productId);
+    products.removeWhere((p) => p.id == productId);
+    notifyListeners();
+    SyncService.instance.syncOutbox();
+  }
+
   // --- Cover Group Management (Admin) ---
   Future<void> addCoverGroup({
     required String baseName,
@@ -142,6 +160,24 @@ class ShopState extends ChangeNotifier {
     coverGroups.add(group);
     notifyListeners();
 
+    SyncService.instance.syncOutbox();
+  }
+
+  Future<void> updateCoverStock({required String coverGroupId, required int newStock}) async {
+    if (newStock < 0) newStock = 0;
+    await AppDatabase.instance.updateCoverStock(coverGroupId, newStock);
+    final idx = coverGroups.indexWhere((c) => c.id == coverGroupId);
+    if (idx != -1) {
+      coverGroups[idx] = coverGroups[idx].copyWith(stockQuantity: newStock);
+      notifyListeners();
+    }
+    SyncService.instance.syncOutbox();
+  }
+
+  Future<void> deleteCoverGroup(String coverGroupId) async {
+    await AppDatabase.instance.deleteCoverGroup(coverGroupId);
+    coverGroups.removeWhere((c) => c.id == coverGroupId);
+    notifyListeners();
     SyncService.instance.syncOutbox();
   }
 

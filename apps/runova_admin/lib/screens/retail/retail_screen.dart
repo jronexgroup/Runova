@@ -4,6 +4,7 @@ import '../../state/shop_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../widgets/bilingual_text.dart';
+import 'add_inventory_screen.dart';
 import 'cover_finder_sheet.dart';
 
 class RetailScreen extends StatefulWidget {
@@ -15,6 +16,7 @@ class RetailScreen extends StatefulWidget {
 
 class _RetailScreenState extends State<RetailScreen> {
   String selectedCategory = 'All';
+  final TextEditingController _searchCtrl = TextEditingController();
 
   // Selected Item for POS sale
   Product? selectedProduct;
@@ -33,11 +35,17 @@ class _RetailScreenState extends State<RetailScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
   void _selectProduct(Product product) {
     setState(() {
       selectedProduct = product;
       selectedCover = null;
-      saleQty = 1;
+      saleQty = product.stockQuantity > 0 ? 1 : 0;
       activeSellPrice = product.defaultSellPrice;
     });
   }
@@ -46,47 +54,78 @@ class _RetailScreenState extends State<RetailScreen> {
     setState(() {
       selectedCover = cover;
       selectedProduct = null;
-      saleQty = 1;
+      saleQty = cover.stockQuantity > 0 ? 1 : 0;
       activeSellPrice = cover.defaultSellPrice;
     });
   }
 
   Money get totalAmount => activeSellPrice * saleQty;
 
-  void _executeSale() {
+  Future<void> _executeSale() async {
     final state = ShopState.instance;
 
     if (selectedProduct != null) {
-      state.recordRetailSale(
+      final targetId = selectedProduct!.id;
+      final qtySold = saleQty;
+      final amount = totalAmount;
+      final name = selectedProduct!.name;
+
+      await state.recordRetailSale(
         product: selectedProduct!,
-        quantity: saleQty,
+        quantity: qtySold,
         actualSellPrice: activeSellPrice,
         tenderType: tenderType,
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.tertiaryContainer,
-          content: Text(
-            'Sale completed! Sold $saleQty x ${selectedProduct!.name} for ${totalAmount.format()}',
-          ),
-        ),
+      final updated = state.products.firstWhere(
+        (p) => p.id == targetId,
+        orElse: () => selectedProduct!,
       );
+
+      setState(() {
+        selectedProduct = updated;
+        saleQty = updated.stockQuantity > 0 ? 1 : 0;
+        activeSellPrice = updated.defaultSellPrice;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.tertiaryContainer,
+            content: Text('Sale completed! Sold $qtySold x $name for ${amount.format()}'),
+          ),
+        );
+      }
     } else if (selectedCover != null) {
-      state.recordCoverSale(
+      final targetId = selectedCover!.id;
+      final qtySold = saleQty;
+      final name = selectedCover!.baseName;
+
+      await state.recordCoverSale(
         coverGroup: selectedCover!,
         actualSellPrice: activeSellPrice,
         tenderType: tenderType,
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.tertiaryContainer,
-          content: Text(
-            'Cover sale completed! Stock reduced for ${selectedCover!.baseName}',
-          ),
-        ),
+      final updated = state.coverGroups.firstWhere(
+        (c) => c.id == targetId,
+        orElse: () => selectedCover!,
       );
+
+      setState(() {
+        selectedCover = updated;
+        saleQty = updated.stockQuantity > 0 ? 1 : 0;
+        activeSellPrice = updated.defaultSellPrice;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.tertiaryContainer,
+            content: Text('Cover sale completed! Sold $qtySold x $name'),
+          ),
+        );
+      }
     }
   }
 
@@ -100,10 +139,6 @@ class _RetailScreenState extends State<RetailScreen> {
       ),
     );
   }
-
-  // ==========================================
-  // BENTO GRID POPUP & DEDICATED INTAKE DIALOGS
-  // ==========================================
 
   void _openAddInventoryBento() {
     showDialog(
@@ -122,7 +157,6 @@ class _RetailScreenState extends State<RetailScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header (Clean, professional, no clunky instruction text)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -170,9 +204,17 @@ class _RetailScreenState extends State<RetailScreen> {
                   cardColor: const Color(0xFFEFF6FF),
                   borderColor: const Color(0xFFBFDBFE),
                   accentColor: const Color(0xFF1D4ED8),
-                  onTap: () {
+                  onTap: () async {
                     Navigator.pop(ctx);
-                    _openAddAccessoryDialog();
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AddInventoryScreen(categoryType: InventoryCategoryType.accessory),
+                      ),
+                    );
+                    if (mounted && ShopState.instance.products.isNotEmpty) {
+                      _selectProduct(ShopState.instance.products.last);
+                    }
                   },
                 ),
                 const SizedBox(height: 10),
@@ -190,9 +232,17 @@ class _RetailScreenState extends State<RetailScreen> {
                         cardColor: const Color(0xFFFFFBEB),
                         borderColor: const Color(0xFFFDE68A),
                         accentColor: const Color(0xFFB45309),
-                        onTap: () {
+                        onTap: () async {
                           Navigator.pop(ctx);
-                          _openAddCoverDialog();
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AddInventoryScreen(categoryType: InventoryCategoryType.coverMatrix),
+                            ),
+                          );
+                          if (mounted && ShopState.instance.coverGroups.isNotEmpty) {
+                            _selectCover(ShopState.instance.coverGroups.last);
+                          }
                         },
                       ),
                     ),
@@ -207,9 +257,17 @@ class _RetailScreenState extends State<RetailScreen> {
                         cardColor: const Color(0xFFF0FDF4),
                         borderColor: const Color(0xFFBBF7D0),
                         accentColor: const Color(0xFF15803D),
-                        onTap: () {
+                        onTap: () async {
                           Navigator.pop(ctx);
-                          _openAddTemperedGlassDialog();
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AddInventoryScreen(categoryType: InventoryCategoryType.temperedGlass),
+                            ),
+                          );
+                          if (mounted && ShopState.instance.products.isNotEmpty) {
+                            _selectProduct(ShopState.instance.products.last);
+                          }
                         },
                       ),
                     ),
@@ -230,9 +288,17 @@ class _RetailScreenState extends State<RetailScreen> {
                         cardColor: const Color(0xFFFFF1F2),
                         borderColor: const Color(0xFFFECDD3),
                         accentColor: const Color(0xFFBE123C),
-                        onTap: () {
+                        onTap: () async {
                           Navigator.pop(ctx);
-                          _openAddSparePartDialog();
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AddInventoryScreen(categoryType: InventoryCategoryType.repairPart),
+                            ),
+                          );
+                          if (mounted && ShopState.instance.products.isNotEmpty) {
+                            _selectProduct(ShopState.instance.products.last);
+                          }
                         },
                       ),
                     ),
@@ -247,9 +313,17 @@ class _RetailScreenState extends State<RetailScreen> {
                         cardColor: const Color(0xFFFAF5FF),
                         borderColor: const Color(0xFFE9D5FF),
                         accentColor: const Color(0xFF7E22CE),
-                        onTap: () {
+                        onTap: () async {
                           Navigator.pop(ctx);
-                          _openAddSmallItemDialog();
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AddInventoryScreen(categoryType: InventoryCategoryType.smallItem),
+                            ),
+                          );
+                          if (mounted && ShopState.instance.products.isNotEmpty) {
+                            _selectProduct(ShopState.instance.products.last);
+                          }
                         },
                       ),
                     ),
@@ -342,678 +416,402 @@ class _RetailScreenState extends State<RetailScreen> {
     );
   }
 
-  // --- Helper: Supplier Dropdown with + New Option ---
-  Widget _buildSupplierDropdown({
-    required String selectedSupplier,
-    required List<Supplier> suppliers,
-    required TextEditingController newSupplierCtrl,
-    required ValueChanged<String?> onChanged,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        DropdownButtonFormField<String>(
-          initialValue: selectedSupplier,
-          decoration: const InputDecoration(
-            labelText: 'Wholesaler / Supplier *',
-            prefixIcon: Icon(Icons.business_outlined, size: 20),
+  void _showAdjustStockSheet(Product product) {
+    int newStock = product.stockQuantity;
+    final stockCtrl = TextEditingController(text: newStock.toString());
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
           ),
-          items: [
-            ...suppliers.map((s) => DropdownMenuItem(
-                  value: s.name,
-                  child: Text(s.name),
-                )),
-            const DropdownMenuItem(
-              value: '__NEW__',
-              child: Row(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(Icons.add_circle_outline, size: 16, color: AppColors.primary),
-                  SizedBox(width: 6),
-                  Text('+ New Supplier', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700)),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(product.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                        Text('${product.category} • Supplier: ${product.supplier}', style: const TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant)),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                    tooltip: 'Delete Product',
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _confirmDeleteProduct(product);
+                    },
+                  ),
                 ],
               ),
-            ),
-          ],
-          onChanged: onChanged,
+              const Divider(height: 24),
+              const Text('Adjust Stock Quantity (Pieces)', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  InkWell(
+                    onTap: newStock > 0
+                        ? () => setSheetState(() {
+                              newStock--;
+                              stockCtrl.text = newStock.toString();
+                            })
+                        : null,
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: newStock > 0 ? AppColors.surfaceContainerHigh : Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.outlineVariant),
+                      ),
+                      child: Icon(Icons.remove, size: 20, color: newStock > 0 ? AppColors.onSurface : Colors.grey),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    width: 80,
+                    height: 44,
+                    child: TextField(
+                      controller: stockCtrl,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                      decoration: InputDecoration(
+                        contentPadding: EdgeInsets.zero,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onChanged: (val) {
+                        final parsed = int.tryParse(val.trim());
+                        if (parsed != null && parsed >= 0) {
+                          setSheetState(() => newStock = parsed);
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  InkWell(
+                    onTap: () => setSheetState(() {
+                      newStock++;
+                      stockCtrl.text = newStock.toString();
+                    }),
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryContainer.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.primaryContainer),
+                      ),
+                      child: const Icon(Icons.add, color: AppColors.primaryContainer, size: 20),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [5, 10, 25].map((add) => Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: ActionChip(
+                            label: Text('+$add', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                            onPressed: () => setSheetState(() {
+                              newStock += add;
+                              stockCtrl.text = newStock.toString();
+                            }),
+                          ),
+                        )).toList(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryContainer,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () async {
+                    await ShopState.instance.updateProductStock(productId: product.id, newStock: newStock);
+                    if (selectedProduct?.id == product.id) {
+                      setState(() {
+                        selectedProduct = product.copyWith(stockQuantity: newStock);
+                        if (saleQty > newStock) saleQty = newStock > 0 ? 1 : 0;
+                      });
+                    }
+                    if (ctx.mounted) Navigator.pop(ctx);
+                  },
+                  child: const Text('Update Stock', style: TextStyle(fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ],
+          ),
         ),
-        if (selectedSupplier == '__NEW__') ...[
-          const SizedBox(height: 8),
-          TextField(
-            controller: newSupplierCtrl,
-            decoration: const InputDecoration(
-              labelText: 'Enter New Supplier Name *',
-              hintText: 'e.g. Royal Accessories Kolkata',
-              prefixIcon: Icon(Icons.add_business, size: 18),
-            ),
+      ),
+    );
+  }
+
+  void _showAdjustCoverSheet(CoverGroup cover) {
+    int newStock = cover.stockQuantity;
+    final stockCtrl = TextEditingController(text: newStock.toString());
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(cover.baseName, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                        Text('Shared Pool • Linked: ${cover.linkedModels.join(", ")}', style: const TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant)),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                    tooltip: 'Delete Cover Matrix',
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _confirmDeleteCover(cover);
+                    },
+                  ),
+                ],
+              ),
+              const Divider(height: 24),
+              const Text('Adjust Shared Stock Pool (Pieces)', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  InkWell(
+                    onTap: newStock > 0
+                        ? () => setSheetState(() {
+                              newStock--;
+                              stockCtrl.text = newStock.toString();
+                            })
+                        : null,
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: newStock > 0 ? AppColors.surfaceContainerHigh : Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.outlineVariant),
+                      ),
+                      child: Icon(Icons.remove, size: 20, color: newStock > 0 ? AppColors.onSurface : Colors.grey),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    width: 80,
+                    height: 44,
+                    child: TextField(
+                      controller: stockCtrl,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                      decoration: InputDecoration(
+                        contentPadding: EdgeInsets.zero,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onChanged: (val) {
+                        final parsed = int.tryParse(val.trim());
+                        if (parsed != null && parsed >= 0) {
+                          setSheetState(() => newStock = parsed);
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  InkWell(
+                    onTap: () => setSheetState(() {
+                      newStock++;
+                      stockCtrl.text = newStock.toString();
+                    }),
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryContainer.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.primaryContainer),
+                      ),
+                      child: const Icon(Icons.add, color: AppColors.primaryContainer, size: 20),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [5, 10, 25].map((add) => Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: ActionChip(
+                            label: Text('+$add', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                            onPressed: () => setSheetState(() {
+                              newStock += add;
+                              stockCtrl.text = newStock.toString();
+                            }),
+                          ),
+                        )).toList(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFB45309),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () async {
+                    await ShopState.instance.updateCoverStock(coverGroupId: cover.id, newStock: newStock);
+                    if (selectedCover?.id == cover.id) {
+                      setState(() {
+                        selectedCover = cover.copyWith(stockQuantity: newStock);
+                        if (saleQty > newStock) saleQty = newStock > 0 ? 1 : 0;
+                      });
+                    }
+                    if (ctx.mounted) Navigator.pop(ctx);
+                  },
+                  child: const Text('Update Shared Stock', style: TextStyle(fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _confirmDeleteProduct(Product product) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Product?'),
+        content: Text('Are you sure you want to delete "${product.name}" from your store?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white),
+            onPressed: () async {
+              await ShopState.instance.deleteProduct(product.id);
+              if (selectedProduct?.id == product.id) {
+                setState(() {
+                  selectedProduct = null;
+                  if (ShopState.instance.products.isNotEmpty) {
+                    _selectProduct(ShopState.instance.products.first);
+                  }
+                });
+              }
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            child: const Text('Delete'),
           ),
         ],
-      ],
-    );
-  }
-
-  Future<String> _resolveSupplier(String selectedSupplier, TextEditingController newSupplierCtrl) async {
-    String sup = selectedSupplier == '__NEW__' ? newSupplierCtrl.text.trim() : selectedSupplier;
-    if (selectedSupplier == '__NEW__' && sup.isNotEmpty) {
-      await ShopState.instance.addSupplier(name: sup);
-    }
-    return sup.isEmpty ? 'Local Wholesaler' : sup;
-  }
-
-  // 1. DEDICATED DIALOG: MOBILE ACCESSORIES
-  void _openAddAccessoryDialog() {
-    final nameCtrl = TextEditingController();
-    final barcodeCtrl = TextEditingController();
-    final buyPriceCtrl = TextEditingController();
-    final sellPriceCtrl = TextEditingController();
-    final stockCtrl = TextEditingController(text: '10');
-    final newSupplierCtrl = TextEditingController();
-
-    String selectedCategory = 'Cables & Chargers';
-    final existingSuppliers = ShopState.instance.suppliers;
-    String selectedSupplier = existingSuppliers.isNotEmpty ? existingSuppliers.first.name : '__NEW__';
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: Row(
-            children: const [
-              Icon(Icons.headphones_rounded, color: Color(0xFF1D4ED8)),
-              SizedBox(width: 8),
-              Text('Add Accessory / Gadget', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Product Name *',
-                    hintText: 'e.g. Boat Bassheads 100 / 33W Charger',
-                  ),
-                ),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  initialValue: selectedCategory,
-                  decoration: const InputDecoration(labelText: 'Sub-Category *'),
-                  items: const [
-                    DropdownMenuItem(value: 'Cables & Chargers', child: Text('Cables & Chargers')),
-                    DropdownMenuItem(value: 'Audio & Earphones', child: Text('Audio & Earphones')),
-                    DropdownMenuItem(value: 'Smartwear & Gadgets', child: Text('Smartwear & Gadgets')),
-                    DropdownMenuItem(value: 'Power Adapters', child: Text('Power Adapters')),
-                    DropdownMenuItem(value: 'Other Accessories', child: Text('Other Accessories')),
-                  ],
-                  onChanged: (val) {
-                    if (val != null) setDialogState(() => selectedCategory = val);
-                  },
-                ),
-                const SizedBox(height: 8),
-                _buildSupplierDropdown(
-                  selectedSupplier: selectedSupplier,
-                  suppliers: existingSuppliers,
-                  newSupplierCtrl: newSupplierCtrl,
-                  onChanged: (val) {
-                    if (val != null) setDialogState(() => selectedSupplier = val);
-                  },
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: barcodeCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Barcode / SKU (Optional)',
-                    hintText: 'Scan or type barcode',
-                    prefixIcon: Icon(Icons.qr_code_scanner, size: 18),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: buyPriceCtrl,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Buy Price *', prefixText: '₹ '),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        controller: sellPriceCtrl,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Sell Price *', prefixText: '₹ '),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: stockCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Stock Quantity *'),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryContainer, foregroundColor: Colors.white),
-              onPressed: () async {
-                final name = nameCtrl.text.trim();
-                final buy = double.tryParse(buyPriceCtrl.text.trim()) ?? 0;
-                final sell = double.tryParse(sellPriceCtrl.text.trim()) ?? 0;
-                final stock = int.tryParse(stockCtrl.text.trim()) ?? 0;
-
-                if (name.isNotEmpty && buy > 0 && sell > 0) {
-                  final sup = await _resolveSupplier(selectedSupplier, newSupplierCtrl);
-                  await ShopState.instance.addProduct(
-                    name: name,
-                    category: selectedCategory,
-                    supplier: sup,
-                    buyPrice: Money.fromRupees(buy),
-                    defaultSellPrice: Money.fromRupees(sell),
-                    initialStock: stock,
-                    barcode: barcodeCtrl.text.trim().isNotEmpty ? barcodeCtrl.text.trim() : null,
-                  );
-                  if (ctx.mounted) Navigator.pop(ctx);
-                  if (mounted && ShopState.instance.products.isNotEmpty) {
-                    _selectProduct(ShopState.instance.products.last);
-                  }
-                }
-              },
-              child: const Text('Save Accessory'),
-            ),
-          ],
-        ),
       ),
     );
   }
 
-  // 2. DEDICATED DIALOG: COVER MATRIX (SHARED POOL STOCK)
-  void _openAddCoverDialog() {
-    final baseNameCtrl = TextEditingController();
-    final modelsCtrl = TextEditingController();
-    final buyPriceCtrl = TextEditingController();
-    final sellPriceCtrl = TextEditingController();
-    final stockCtrl = TextEditingController(text: '15');
-    final newSupplierCtrl = TextEditingController();
-
-    final existingSuppliers = ShopState.instance.suppliers;
-    String selectedSupplier = existingSuppliers.isNotEmpty ? existingSuppliers.first.name : '__NEW__';
-
+  void _confirmDeleteCover(CoverGroup cover) {
     showDialog(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: Row(
-            children: const [
-              Icon(Icons.phone_android_rounded, color: Color(0xFFB45309)),
-              SizedBox(width: 8),
-              Text('Add Cover Matrix', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: baseNameCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Base Model Family Name *',
-                    hintText: 'e.g. Realme 9 4G / Realme 9 Pro',
-                    helperText: 'One pooled stock for all matching models',
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: modelsCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Linked Models (Comma Separated) *',
-                    hintText: 'e.g. Realme 9, Realme 9 Pro, Narzo 50',
-                  ),
-                ),
-                const SizedBox(height: 8),
-                _buildSupplierDropdown(
-                  selectedSupplier: selectedSupplier,
-                  suppliers: existingSuppliers,
-                  newSupplierCtrl: newSupplierCtrl,
-                  onChanged: (val) {
-                    if (val != null) setDialogState(() => selectedSupplier = val);
-                  },
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: buyPriceCtrl,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Buy Price *', prefixText: '₹ '),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        controller: sellPriceCtrl,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Sell Price *', prefixText: '₹ '),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: stockCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Shared Stock Pool *'),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFB45309), foregroundColor: Colors.white),
-              onPressed: () async {
-                final baseName = baseNameCtrl.text.trim();
-                final buy = double.tryParse(buyPriceCtrl.text.trim()) ?? 0;
-                final sell = double.tryParse(sellPriceCtrl.text.trim()) ?? 0;
-                final stock = int.tryParse(stockCtrl.text.trim()) ?? 0;
-
-                if (baseName.isNotEmpty && buy > 0 && sell > 0) {
-                  final sup = await _resolveSupplier(selectedSupplier, newSupplierCtrl);
-                  final models = modelsCtrl.text
-                      .split(',')
-                      .map((m) => m.trim())
-                      .where((m) => m.isNotEmpty)
-                      .toList();
-                  if (!models.contains(baseName)) models.insert(0, baseName);
-
-                  await ShopState.instance.addCoverGroup(
-                    baseName: baseName,
-                    linkedModels: models,
-                    wholesaler: sup,
-                    buyPrice: Money.fromRupees(buy),
-                    defaultSellPrice: Money.fromRupees(sell),
-                    initialStock: stock,
-                  );
-                  if (ctx.mounted) Navigator.pop(ctx);
-                  if (mounted && ShopState.instance.coverGroups.isNotEmpty) {
-                    _selectCover(ShopState.instance.coverGroups.last);
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Cover Matrix?'),
+        content: Text('Are you sure you want to delete "${cover.baseName}" cover group?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white),
+            onPressed: () async {
+              await ShopState.instance.deleteCoverGroup(cover.id);
+              if (selectedCover?.id == cover.id) {
+                setState(() {
+                  selectedCover = null;
+                  if (ShopState.instance.coverGroups.isNotEmpty) {
+                    _selectCover(ShopState.instance.coverGroups.first);
                   }
-                }
-              },
-              child: const Text('Save Cover Matrix'),
-            ),
-          ],
-        ),
+                });
+              }
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
   }
 
-  // 3. DEDICATED DIALOG: TEMPERED GLASS & SCREEN PROTECTORS
-  void _openAddTemperedGlassDialog() {
-    final modelCtrl = TextEditingController();
-    final buyPriceCtrl = TextEditingController();
-    final sellPriceCtrl = TextEditingController();
-    final stockCtrl = TextEditingController(text: '20');
-    final newSupplierCtrl = TextEditingController();
-
-    String selectedGlassType = '11D Curved Black Edge';
-    final existingSuppliers = ShopState.instance.suppliers;
-    String selectedSupplier = existingSuppliers.isNotEmpty ? existingSuppliers.first.name : '__NEW__';
-
+  void _showCustomPriceDialog(Money currentPrice) {
+    final priceCtrl = TextEditingController(text: currentPrice.inRupees.toString());
     showDialog(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: Row(
-            children: const [
-              Icon(Icons.shield_outlined, color: Color(0xFF15803D)),
-              SizedBox(width: 8),
-              Text('Add Tempered Glass', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-            ],
+      builder: (ctx) => AlertDialog(
+        title: const Text('Custom Bargain Price (রফা মূল্য)'),
+        content: TextField(
+          controller: priceCtrl,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Negotiated Unit Price (₹)',
+            prefixText: '₹ ',
           ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: modelCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Target Device / Model *',
-                    hintText: 'e.g. Redmi Note 12 5G / Poco X5',
-                  ),
-                ),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  initialValue: selectedGlassType,
-                  decoration: const InputDecoration(labelText: 'Glass Protection Type *'),
-                  items: const [
-                    DropdownMenuItem(value: '11D Curved Black Edge', child: Text('11D Curved Black Edge')),
-                    DropdownMenuItem(value: 'Matte Gaming (Anti-Glare)', child: Text('Matte Gaming (Anti-Glare)')),
-                    DropdownMenuItem(value: 'Privacy Spy Filter', child: Text('Privacy Spy Filter')),
-                    DropdownMenuItem(value: 'UV Liquid Full Glue', child: Text('UV Liquid Full Glue')),
-                    DropdownMenuItem(value: 'Super D HD Clear', child: Text('Super D HD Clear')),
-                    DropdownMenuItem(value: 'Camera Lens Protector', child: Text('Camera Lens Protector')),
-                  ],
-                  onChanged: (val) {
-                    if (val != null) setDialogState(() => selectedGlassType = val);
-                  },
-                ),
-                const SizedBox(height: 8),
-                _buildSupplierDropdown(
-                  selectedSupplier: selectedSupplier,
-                  suppliers: existingSuppliers,
-                  newSupplierCtrl: newSupplierCtrl,
-                  onChanged: (val) {
-                    if (val != null) setDialogState(() => selectedSupplier = val);
-                  },
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: buyPriceCtrl,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Buy Price/pc *', prefixText: '₹ '),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        controller: sellPriceCtrl,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Sell Price/pc *', prefixText: '₹ '),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: stockCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Lot / Stock Quantity (pcs) *'),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF15803D), foregroundColor: Colors.white),
-              onPressed: () async {
-                final model = modelCtrl.text.trim();
-                final buy = double.tryParse(buyPriceCtrl.text.trim()) ?? 0;
-                final sell = double.tryParse(sellPriceCtrl.text.trim()) ?? 0;
-                final stock = int.tryParse(stockCtrl.text.trim()) ?? 0;
-
-                if (model.isNotEmpty && buy > 0 && sell > 0) {
-                  final sup = await _resolveSupplier(selectedSupplier, newSupplierCtrl);
-                  await ShopState.instance.addProduct(
-                    name: '$model ($selectedGlassType)',
-                    category: 'Tempered Glass',
-                    supplier: sup,
-                    buyPrice: Money.fromRupees(buy),
-                    defaultSellPrice: Money.fromRupees(sell),
-                    initialStock: stock,
-                  );
-                  if (ctx.mounted) Navigator.pop(ctx);
-                  if (mounted && ShopState.instance.products.isNotEmpty) {
-                    _selectProduct(ShopState.instance.products.last);
-                  }
-                }
-              },
-              child: const Text('Save Glass'),
-            ),
-          ],
         ),
-      ),
-    );
-  }
-
-  // 4. DEDICATED DIALOG: REPAIR SPARE PARTS
-  void _openAddSparePartDialog() {
-    final modelCtrl = TextEditingController();
-    final buyPriceCtrl = TextEditingController();
-    final sellPriceCtrl = TextEditingController();
-    final stockCtrl = TextEditingController(text: '3');
-    final newSupplierCtrl = TextEditingController();
-
-    String selectedPartType = 'Display / Combo (OLED)';
-    final existingSuppliers = ShopState.instance.suppliers;
-    String selectedSupplier = existingSuppliers.isNotEmpty ? existingSuppliers.first.name : '__NEW__';
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: Row(
-            children: const [
-              Icon(Icons.build_circle_outlined, color: Color(0xFFBE123C)),
-              SizedBox(width: 8),
-              Text('Add Repair Spare Part', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-            ],
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              final parsed = double.tryParse(priceCtrl.text.trim());
+              if (parsed != null && parsed >= 0) {
+                setState(() => activeSellPrice = Money.fromRupees(parsed));
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text('Set Price'),
           ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: modelCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Target Mobile Model *',
-                    hintText: 'e.g. Samsung Galaxy M31 / Redmi 10',
-                  ),
-                ),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  initialValue: selectedPartType,
-                  decoration: const InputDecoration(labelText: 'Component / Part Type *'),
-                  items: const [
-                    DropdownMenuItem(value: 'Display / Combo (OLED)', child: Text('Display / Combo (OLED)')),
-                    DropdownMenuItem(value: 'Display / Combo (INCELL)', child: Text('Display / Combo (INCELL)')),
-                    DropdownMenuItem(value: 'Original Battery', child: Text('Original Battery')),
-                    DropdownMenuItem(value: 'Compatible Battery', child: Text('Compatible Battery')),
-                    DropdownMenuItem(value: 'Charging Sub-Board (CC)', child: Text('Charging Sub-Board (CC)')),
-                    DropdownMenuItem(value: 'Speaker / Ringer', child: Text('Speaker / Ringer')),
-                    DropdownMenuItem(value: 'Camera Glass Lens', child: Text('Camera Glass Lens')),
-                    DropdownMenuItem(value: 'Flex Cable / Buttons', child: Text('Flex Cable / Buttons')),
-                  ],
-                  onChanged: (val) {
-                    if (val != null) setDialogState(() => selectedPartType = val);
-                  },
-                ),
-                const SizedBox(height: 8),
-                _buildSupplierDropdown(
-                  selectedSupplier: selectedSupplier,
-                  suppliers: existingSuppliers,
-                  newSupplierCtrl: newSupplierCtrl,
-                  onChanged: (val) {
-                    if (val != null) setDialogState(() => selectedSupplier = val);
-                  },
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: buyPriceCtrl,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Part Cost *', prefixText: '₹ '),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        controller: sellPriceCtrl,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Billing Price *', prefixText: '₹ '),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: stockCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Stock Quantity *'),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFBE123C), foregroundColor: Colors.white),
-              onPressed: () async {
-                final model = modelCtrl.text.trim();
-                final buy = double.tryParse(buyPriceCtrl.text.trim()) ?? 0;
-                final sell = double.tryParse(sellPriceCtrl.text.trim()) ?? 0;
-                final stock = int.tryParse(stockCtrl.text.trim()) ?? 0;
-
-                if (model.isNotEmpty && buy > 0 && sell > 0) {
-                  final sup = await _resolveSupplier(selectedSupplier, newSupplierCtrl);
-                  await ShopState.instance.addProduct(
-                    name: '$model $selectedPartType',
-                    category: 'Spare Parts',
-                    supplier: sup,
-                    buyPrice: Money.fromRupees(buy),
-                    defaultSellPrice: Money.fromRupees(sell),
-                    initialStock: stock,
-                  );
-                  if (ctx.mounted) Navigator.pop(ctx);
-                  if (mounted && ShopState.instance.products.isNotEmpty) {
-                    _selectProduct(ShopState.instance.products.last);
-                  }
-                }
-              },
-              child: const Text('Save Spare Part'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 5. DEDICATED DIALOG: SMALL ITEMS (₹1–₹20)
-  void _openAddSmallItemDialog() {
-    final nameCtrl = TextEditingController();
-    final buyPriceCtrl = TextEditingController(text: '2');
-    final sellPriceCtrl = TextEditingController(text: '10');
-    final stockCtrl = TextEditingController(text: '50');
-    final newSupplierCtrl = TextEditingController();
-
-    final existingSuppliers = ShopState.instance.suppliers;
-    String selectedSupplier = existingSuppliers.isNotEmpty ? existingSuppliers.first.name : '__NEW__';
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: Row(
-            children: const [
-              Icon(Icons.widgets_outlined, color: Color(0xFF7E22CE)),
-              SizedBox(width: 8),
-              Text('Add Small Counter Item', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Item Name *',
-                    hintText: 'e.g. Type-C OTG Adapter / SIM Pin',
-                  ),
-                ),
-                const SizedBox(height: 8),
-                _buildSupplierDropdown(
-                  selectedSupplier: selectedSupplier,
-                  suppliers: existingSuppliers,
-                  newSupplierCtrl: newSupplierCtrl,
-                  onChanged: (val) {
-                    if (val != null) setDialogState(() => selectedSupplier = val);
-                  },
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: buyPriceCtrl,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Buy Price/pc *', prefixText: '₹ '),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        controller: sellPriceCtrl,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Sell Price *', prefixText: '₹ '),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                // Quick Sell Price Chips
-                Row(
-                  children: [5, 10, 20, 30, 50].map((amt) {
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 6),
-                      child: ActionChip(
-                        label: Text('₹$amt', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700)),
-                        padding: EdgeInsets.zero,
-                        onPressed: () => setDialogState(() => sellPriceCtrl.text = amt.toString()),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: stockCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Stock Quantity *'),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF7E22CE), foregroundColor: Colors.white),
-              onPressed: () async {
-                final name = nameCtrl.text.trim();
-                final buy = double.tryParse(buyPriceCtrl.text.trim()) ?? 0;
-                final sell = double.tryParse(sellPriceCtrl.text.trim()) ?? 0;
-                final stock = int.tryParse(stockCtrl.text.trim()) ?? 0;
-
-                if (name.isNotEmpty && buy >= 0 && sell > 0) {
-                  final sup = await _resolveSupplier(selectedSupplier, newSupplierCtrl);
-                  await ShopState.instance.addProduct(
-                    name: name,
-                    category: 'Small Items',
-                    supplier: sup,
-                    buyPrice: Money.fromRupees(buy),
-                    defaultSellPrice: Money.fromRupees(sell),
-                    initialStock: stock,
-                  );
-                  if (ctx.mounted) Navigator.pop(ctx);
-                  if (mounted && ShopState.instance.products.isNotEmpty) {
-                    _selectProduct(ShopState.instance.products.last);
-                  }
-                }
-              },
-              child: const Text('Save Small Item'),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -1026,12 +824,20 @@ class _RetailScreenState extends State<RetailScreen> {
     return AnimatedBuilder(
       animation: state,
       builder: (context, _) {
-        final hasSelectedItem = selectedProduct != null || selectedCover != null;
-        final currentStock = selectedProduct != null
-            ? selectedProduct!.stockQuantity
-            : (selectedCover != null ? selectedCover!.stockQuantity : 0);
+        final liveProduct = selectedProduct != null
+            ? state.products.firstWhere((p) => p.id == selectedProduct!.id, orElse: () => selectedProduct!)
+            : null;
+        final liveCover = selectedCover != null
+            ? state.coverGroups.firstWhere((c) => c.id == selectedCover!.id, orElse: () => selectedCover!)
+            : null;
 
-        final itemName = selectedProduct?.name ?? selectedCover?.baseName ?? 'Select an item to begin sale';
+        final hasSelectedItem = liveProduct != null || liveCover != null;
+        final currentStock = liveProduct != null
+            ? liveProduct.stockQuantity
+            : (liveCover != null ? liveCover.stockQuantity : 0);
+
+        final itemName = liveProduct?.name ?? liveCover?.baseName ?? 'Select an item to begin sale';
+        final basePrice = liveProduct?.defaultSellPrice ?? liveCover?.defaultSellPrice ?? Money.zero;
 
         return ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1074,16 +880,32 @@ class _RetailScreenState extends State<RetailScreen> {
                       border: Border.all(color: AppColors.outlineVariant),
                     ),
                     child: Row(
-                      children: const [
-                        Icon(Icons.search, size: 20, color: AppColors.outline),
-                        SizedBox(width: 8),
+                      children: [
+                        const Icon(Icons.search, size: 20, color: AppColors.outline),
+                        const SizedBox(width: 8),
                         Expanded(
-                          child: Text(
-                            'Search inventory or scan...',
-                            style: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 13),
+                          child: TextField(
+                            controller: _searchCtrl,
+                            decoration: const InputDecoration(
+                              hintText: 'Search inventory or scan...',
+                              hintStyle: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 13),
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                            onChanged: (_) => setState(() {}),
                           ),
                         ),
-                        Icon(Icons.qr_code_scanner, size: 20, color: AppColors.primary),
+                        if (_searchCtrl.text.isNotEmpty)
+                          GestureDetector(
+                            onTap: () {
+                              _searchCtrl.clear();
+                              setState(() {});
+                            },
+                            child: const Icon(Icons.clear, size: 18, color: AppColors.outline),
+                          )
+                        else
+                          const Icon(Icons.qr_code_scanner, size: 20, color: AppColors.primary),
                       ],
                     ),
                   ),
@@ -1132,7 +954,7 @@ class _RetailScreenState extends State<RetailScreen> {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          selectedCover != null ? 'Mobile Cover (Shared Stock)' : 'Retail Accessory',
+                          liveCover != null ? 'Mobile Cover (Shared Stock)' : 'Retail Accessory',
                           style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.primary),
                         ),
                       ),
@@ -1154,62 +976,68 @@ class _RetailScreenState extends State<RetailScreen> {
                   ),
 
                   if (!hasSelectedItem) ...[
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Select a product from the list below, or tap "+ Add Product" to stock new items.',
-                      style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant),
-                    ),
+                    const SizedBox(height: 10),
+                    const Text('Tap any product in your inventory below to load it into checkout.', style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant)),
                   ] else ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
 
-                    // Quantity Stepper
+                    // Quantity Stepper with 44x44 touch targets
                     Row(
                       children: [
-                        const Text('Quantity:', style: TextStyle(fontWeight: FontWeight.w600)),
+                        const Text('Sale Quantity: ', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                         const Spacer(),
-                        _qtyBtn(Icons.remove, () {
-                          if (saleQty > 1) setState(() => saleQty--);
-                        }),
+                        _qtyBtn(
+                          Icons.remove,
+                          saleQty > 1 ? () => setState(() => saleQty--) : null,
+                        ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 14),
                           child: Text(
                             '$saleQty',
                             style: AppTypography.headlineSm.copyWith(
                               fontFeatures: const [FontFeature.tabularFigures()],
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
-                        _qtyBtn(Icons.add, () {
-                          if (saleQty < currentStock) setState(() => saleQty++);
-                        }),
+                        _qtyBtn(
+                          Icons.add,
+                          saleQty < currentStock ? () => setState(() => saleQty++) : null,
+                        ),
                       ],
                     ),
                     const Divider(height: 24),
 
-                    // Bargaining Price Presets
+                    // Bargaining Price Presets (Calculated from Base Price)
                     const Text('Price per Unit (Bargaining / রফা):', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
                     const SizedBox(height: 8),
                     Row(
                       children: [
                         Expanded(
                           child: _bargainChip(
-                            label: 'Full (₹${(activeSellPrice.inRupees * 1.1).round()})',
-                            price: Money.fromRupees((activeSellPrice.inRupees * 1.1).round()),
+                            label: 'Full (₹${(basePrice.inRupees * 1.1).round()})',
+                            price: Money.fromRupees((basePrice.inRupees * 1.1).round()),
                           ),
                         ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: _bargainChip(
-                            label: 'Fair (${activeSellPrice.format()})',
-                            price: activeSellPrice,
+                            label: 'Fair (${basePrice.format()})',
+                            price: basePrice,
                           ),
                         ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: _bargainChip(
-                            label: 'Min (₹${(activeSellPrice.inRupees * 0.9).round()})',
-                            price: Money.fromRupees((activeSellPrice.inRupees * 0.9).round()),
+                            label: 'Min (₹${(basePrice.inRupees * 0.9).round()})',
+                            price: Money.fromRupees((basePrice.inRupees * 0.9).round()),
                           ),
+                        ),
+                        const SizedBox(width: 6),
+                        IconButton.filledTonal(
+                          icon: const Icon(Icons.edit_note, size: 20),
+                          tooltip: 'Custom Bargain Price',
+                          onPressed: () => _showCustomPriceDialog(basePrice),
                         ),
                       ],
                     ),
@@ -1255,7 +1083,7 @@ class _RetailScreenState extends State<RetailScreen> {
                           ),
                           icon: const Icon(Icons.shopping_cart_checkout, size: 20),
                           label: const Text('Confirm Sale', style: TextStyle(fontWeight: FontWeight.w700)),
-                          onPressed: currentStock > 0 ? _executeSale : null,
+                          onPressed: currentStock > 0 && saleQty > 0 ? _executeSale : null,
                         ),
                       ],
                     ),
@@ -1288,13 +1116,20 @@ class _RetailScreenState extends State<RetailScreen> {
             ),
             const SizedBox(height: 10),
 
+            // 5. Dynamic Inventory List
             Builder(
               builder: (context) {
+                final query = _searchCtrl.text.toLowerCase().trim();
                 final List<Widget> inventoryTiles = [];
 
                 // 1. Cover Groups (show when 'All' or 'Covers' is selected)
                 if (selectedCategory == 'All' || selectedCategory == 'Covers') {
-                  for (final cover in state.coverGroups) {
+                  final filteredCovers = state.coverGroups.where((c) {
+                    if (query.isEmpty) return true;
+                    return c.matchesModel(query) || c.wholesaler.toLowerCase().contains(query);
+                  }).toList();
+
+                  for (final cover in filteredCovers) {
                     inventoryTiles.add(Card(
                       margin: const EdgeInsets.only(bottom: 8),
                       child: ListTile(
@@ -1315,7 +1150,12 @@ class _RetailScreenState extends State<RetailScreen> {
                               cover.defaultSellPrice.format(),
                               style: AppTypography.labelLg.copyWith(color: AppColors.primaryContainer),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              icon: const Icon(Icons.tune, color: AppColors.outline, size: 18),
+                              tooltip: 'Adjust stock / delete',
+                              onPressed: () => _showAdjustCoverSheet(cover),
+                            ),
                             IconButton(
                               icon: const Icon(Icons.add_shopping_cart, color: AppColors.primary),
                               onPressed: () => _selectCover(cover),
@@ -1329,25 +1169,34 @@ class _RetailScreenState extends State<RetailScreen> {
 
                 // 2. Retail Products
                 final filteredProducts = state.products.where((p) {
-                  if (selectedCategory == 'All') return true;
-                  if (selectedCategory == 'Cables & Chargers') {
-                    return p.category == 'Cables & Chargers' ||
+                  // Category match
+                  bool catMatch = false;
+                  if (selectedCategory == 'All') {
+                    catMatch = true;
+                  } else if (selectedCategory == 'Cables & Chargers') {
+                    catMatch = p.category == 'Cables & Chargers' ||
                         p.category == 'General Accessories' ||
                         p.category == 'Accessories' ||
                         p.category == 'Audio & Earphones' ||
                         p.category == 'Smartwear & Gadgets' ||
                         p.category == 'Power Adapters';
+                  } else if (selectedCategory == 'Tempered Glass') {
+                    catMatch = p.category == 'Tempered Glass';
+                  } else if (selectedCategory == 'Repair Parts') {
+                    catMatch = p.category == 'Spare Parts';
+                  } else if (selectedCategory == 'Small Items') {
+                    catMatch = p.category == 'Small Items';
+                  } else {
+                    catMatch = p.category == selectedCategory;
                   }
-                  if (selectedCategory == 'Tempered Glass') {
-                    return p.category == 'Tempered Glass';
-                  }
-                  if (selectedCategory == 'Repair Parts') {
-                    return p.category == 'Spare Parts';
-                  }
-                  if (selectedCategory == 'Small Items') {
-                    return p.category == 'Small Items';
-                  }
-                  return p.category == selectedCategory;
+
+                  if (!catMatch) return false;
+                  if (query.isEmpty) return true;
+
+                  return p.name.toLowerCase().contains(query) ||
+                      p.category.toLowerCase().contains(query) ||
+                      p.supplier.toLowerCase().contains(query) ||
+                      (p.barcode != null && p.barcode!.toLowerCase().contains(query));
                 }).toList();
 
                 for (final p in filteredProducts) {
@@ -1379,7 +1228,12 @@ class _RetailScreenState extends State<RetailScreen> {
                             p.defaultSellPrice.format(),
                             style: AppTypography.labelLg.copyWith(color: AppColors.primaryContainer),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 4),
+                          IconButton(
+                            icon: const Icon(Icons.tune, color: AppColors.outline, size: 18),
+                            tooltip: 'Adjust stock / delete',
+                            onPressed: () => _showAdjustStockSheet(p),
+                          ),
                           IconButton(
                             icon: const Icon(Icons.add_shopping_cart, color: AppColors.primary),
                             onPressed: () => _selectProduct(p),
@@ -1402,7 +1256,7 @@ class _RetailScreenState extends State<RetailScreen> {
                       children: const [
                         Icon(Icons.inventory_2_outlined, size: 36, color: AppColors.outline),
                         SizedBox(height: 8),
-                        Text('No products in this category', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                        Text('No products found', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
                         SizedBox(height: 2),
                         Text('Tap "+ Add Product" above to stock your retail catalog.', style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant)),
                       ],
@@ -1465,18 +1319,23 @@ class _RetailScreenState extends State<RetailScreen> {
     );
   }
 
-  Widget _qtyBtn(IconData icon, VoidCallback onTap) {
+  Widget _qtyBtn(IconData icon, VoidCallback? onTap) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
-        width: 32,
-        height: 32,
+        width: 44,
+        height: 44,
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(6),
+          color: onTap != null ? AppColors.surfaceContainerHighest : Colors.grey.shade200,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: onTap != null ? AppColors.outlineVariant : Colors.transparent),
         ),
-        child: Icon(icon, size: 16, color: AppColors.onSurface),
+        child: Icon(
+          icon,
+          size: 20,
+          color: onTap != null ? AppColors.onSurface : Colors.grey.shade400,
+        ),
       ),
     );
   }

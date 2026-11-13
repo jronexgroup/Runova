@@ -276,6 +276,21 @@ class AppDatabase {
     ''', [quantity, DateTime.now().millisecondsSinceEpoch, productId, quantity]);
   }
 
+  Future<void> updateProductStock(String productId, int newStock) async {
+    final db = await database;
+    await db.update('products', {
+      'stock_quantity': newStock,
+      'updated_at': DateTime.now().millisecondsSinceEpoch,
+    }, where: 'id = ?', whereArgs: [productId]);
+    await _enqueueSync('products', productId, 'upsert', {'id': productId, 'stock_quantity': newStock});
+  }
+
+  Future<void> deleteProduct(String productId) async {
+    final db = await database;
+    await db.delete('products', where: 'id = ?', whereArgs: [productId]);
+    await _enqueueSync('products', productId, 'delete', {'id': productId});
+  }
+
   // --- Cover Groups CRUD ---
   Future<List<CoverGroup>> getCoverGroups() async {
     final db = await database;
@@ -320,6 +335,21 @@ class AppDatabase {
       SET stock_quantity = stock_quantity - 1, updated_at = ?
       WHERE id = ? AND stock_quantity > 0
     ''', [DateTime.now().millisecondsSinceEpoch, coverGroupId]);
+  }
+
+  Future<void> updateCoverStock(String coverGroupId, int newStock) async {
+    final db = await database;
+    await db.update('cover_groups', {
+      'stock_quantity': newStock,
+      'updated_at': DateTime.now().millisecondsSinceEpoch,
+    }, where: 'id = ?', whereArgs: [coverGroupId]);
+    await _enqueueSync('cover_groups', coverGroupId, 'upsert', {'id': coverGroupId, 'stock_quantity': newStock});
+  }
+
+  Future<void> deleteCoverGroup(String coverGroupId) async {
+    final db = await database;
+    await db.delete('cover_groups', where: 'id = ?', whereArgs: [coverGroupId]);
+    await _enqueueSync('cover_groups', coverGroupId, 'delete', {'id': coverGroupId});
   }
 
   // --- Repair Tickets CRUD ---
