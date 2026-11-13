@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -12,6 +13,19 @@ class SyncService {
   SyncService._();
 
   bool _isSyncing = false;
+  Timer? _periodicTimer;
+
+  /// Starts a periodic background drainage timer (default: every 15 seconds).
+  void startPeriodicSync([Duration interval = const Duration(seconds: 15)]) {
+    _periodicTimer?.cancel();
+    _periodicTimer = Timer.periodic(interval, (_) => syncOutbox());
+    syncOutbox();
+  }
+
+  void stopPeriodicSync() {
+    _periodicTimer?.cancel();
+    _periodicTimer = null;
+  }
 
   /// Trigger sync drainage. High priority, safe to invoke after every local mutation.
   Future<void> syncOutbox() async {

@@ -86,8 +86,9 @@ class ShopState extends ChangeNotifier {
     isInitialized = true;
     notifyListeners();
 
-    // Trigger sync drainage if connected
+    // Trigger sync drainage and keep periodic background sync running (every 15s)
     SyncService.instance.syncOutbox();
+    SyncService.instance.startPeriodicSync();
   }
 
   // --- Product Management (Admin) ---
