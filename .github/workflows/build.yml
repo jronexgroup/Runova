@@ -1,4 +1,4 @@
-name: Build Runova Admin APK
+name: Build Runova Apps (Admin & Worker)
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    name: Test & Build Release APK
+    name: Test & Build Release APKs
     runs-on: ubuntu-latest
 
     steps:
@@ -48,15 +48,35 @@ jobs:
           flutter analyze --no-fatal-infos
           flutter test
 
-      - name: Build Release APK
+      - name: Build Admin Release APK
         run: |
           cd apps/runova_admin
           flutter build apk --release
 
-      - name: Upload Release APK Artifact
+      - name: Upload Admin Release APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: runova-admin-release-apk
           path: apps/runova_admin/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Analyze & Test Worker App (runova_worker)
+        run: |
+          cd apps/runova_worker
+          flutter pub get
+          flutter analyze --no-fatal-infos
+          flutter test
+
+      - name: Build Worker Release APK
+        run: |
+          cd apps/runova_worker
+          flutter build apk --release
+
+      - name: Upload Worker Release APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: runova-worker-release-apk
+          path: apps/runova_worker/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 14

@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "762321096086",
+    "project_id": "runova-group",
+    "storage_bucket": "runova-group.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:762321096086:android:a3175db3567e24f1dde1b7",
+        "android_client_info": {
+          "package_name": "com.runova.shop.runova_admin"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "762321096086-g2eek6g6j53babj8lcem6dl4blkc4bse.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCEkeovGtXDHUSONOyzQLbMoeO_YTvnMi8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "762321096086-g2eek6g6j53babj8lcem6dl4blkc4bse.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:762321096086:android:f6fcf015842acea3dde1b7",
+        "android_client_info": {
+          "package_name": "com.runova.shop.runova_worker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "762321096086-g2eek6g6j53babj8lcem6dl4blkc4bse.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCEkeovGtXDHUSONOyzQLbMoeO_YTvnMi8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "762321096086-g2eek6g6j53babj8lcem6dl4blkc4bse.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

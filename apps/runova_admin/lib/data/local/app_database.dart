@@ -559,19 +559,25 @@ class AppDatabase {
     await _enqueueSync('workers', workerId, 'delete', {'id': workerId});
   }
 
+  static int _syncCounter = 0;
+
   // --- High Priority Sync Queue ---
   Future<void> _enqueueSync(String collection, String docId, String operation, Map<String, dynamic> payload) async {
     final db = await database;
-    await db.insert('sync_outbox', {
-      'id': '${collection}_${docId}_${DateTime.now().millisecondsSinceEpoch}',
-      'collection_name': collection,
-      'document_id': docId,
-      'operation': operation,
-      'payload_json': jsonEncode(payload),
-      'created_at': DateTime.now().millisecondsSinceEpoch,
-      'attempts': 0,
-      'status': 'pending',
-    });
+    await db.insert(
+      'sync_outbox',
+      {
+        'id': '${collection}_${docId}_${DateTime.now().microsecondsSinceEpoch}_${_syncCounter++}',
+        'collection_name': collection,
+        'document_id': docId,
+        'operation': operation,
+        'payload_json': jsonEncode(payload),
+        'created_at': DateTime.now().millisecondsSinceEpoch,
+        'attempts': 0,
+        'status': 'pending',
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<List<Map<String, dynamic>>> getPendingSyncTasks() async {
