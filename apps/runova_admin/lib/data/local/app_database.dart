@@ -220,6 +220,18 @@ class AppDatabase {
         created_at INTEGER NOT NULL
       )
     ''');
+
+    // 14. Suppliers / Wholesalers Entity
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS suppliers (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        phone TEXT,
+        category TEXT,
+        address TEXT,
+        created_at INTEGER NOT NULL
+      )
+    ''');
   }
 
   // --- Products CRUD ---
@@ -559,6 +571,26 @@ class AppDatabase {
     final row = worker.toMap();
     await db.insert('workers', row, conflictAlgorithm: ConflictAlgorithm.replace);
     await _enqueueSync('workers', worker.id, 'upsert', row);
+  }
+
+  // --- Suppliers CRUD ---
+  Future<List<Supplier>> getSuppliers() async {
+    final db = await database;
+    final rows = await db.query('suppliers', orderBy: 'name ASC');
+    return rows.map((r) => Supplier.fromMap(r)).toList();
+  }
+
+  Future<void> saveSupplier(Supplier supplier) async {
+    final db = await database;
+    final row = supplier.toMap();
+    await db.insert('suppliers', row, conflictAlgorithm: ConflictAlgorithm.replace);
+    await _enqueueSync('suppliers', supplier.id, 'upsert', row);
+  }
+
+  Future<void> deleteSupplier(String id) async {
+    final db = await database;
+    await db.delete('suppliers', where: 'id = ?', whereArgs: [id]);
+    await _enqueueSync('suppliers', id, 'delete', {'id': id});
   }
 
   Future<void> deleteWorker(String workerId) async {

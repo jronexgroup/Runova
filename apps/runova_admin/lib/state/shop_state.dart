@@ -30,6 +30,7 @@ class ShopState extends ChangeNotifier {
   final List<RepairTicket> repairTickets = [];
   final List<Invoice> invoices = [];
   final List<Expense> expenses = [];
+  final List<Supplier> suppliers = [];
 
   /// Initializes the state from the local SQLite database.
   Future<void> init({bool force = false}) async {
@@ -52,6 +53,9 @@ class ShopState extends ChangeNotifier {
 
     expenses.clear();
     expenses.addAll(await db.getExpenses());
+
+    suppliers.clear();
+    suppliers.addAll(await db.getSuppliers());
 
     // Recompute shift totals from transactions created today
     final now = DateTime.now();
@@ -217,6 +221,36 @@ class ShopState extends ChangeNotifier {
       updatedAt: DateTime.now(),
     );
     repairTickets[index] = updatedTicket;
+    notifyListeners();
+    SyncService.instance.syncOutbox();
+  }
+
+  // --- Supplier Operations ---
+  Future<Supplier> addSupplier({
+    required String name,
+    String phone = '',
+    String category = 'General',
+    String address = '',
+  }) async {
+    final supplier = Supplier(
+      id: 'SUP-${DateTime.now().millisecondsSinceEpoch % 100000}',
+      name: name.trim(),
+      phone: phone.trim(),
+      category: category.trim(),
+      address: address.trim(),
+      createdAt: DateTime.now(),
+    );
+
+    await AppDatabase.instance.saveSupplier(supplier);
+    suppliers.add(supplier);
+    notifyListeners();
+    SyncService.instance.syncOutbox();
+    return supplier;
+  }
+
+  Future<void> deleteSupplier(String id) async {
+    await AppDatabase.instance.deleteSupplier(id);
+    suppliers.removeWhere((s) => s.id == id);
     notifyListeners();
     SyncService.instance.syncOutbox();
   }

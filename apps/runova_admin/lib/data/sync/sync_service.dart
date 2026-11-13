@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../local/app_database.dart';
 import '../remote/firebase_manager.dart';
+import '../auth/auth_service.dart';
 
 /// High-Priority Bidirectional Synchronization Engine (PRD Section 10.1).
 /// Drains local outbox mutations to Cloud Firestore upon network connectivity.
@@ -47,7 +48,8 @@ class SyncService {
             await firestore.collection('users').doc(docId).set(payload, SetOptions(merge: true));
           } else {
             // Scope multi-tenant data under shops/{shopId}/{collection}
-            final shopId = payload['shop_id'] as String? ?? '';
+            final rawShopId = payload['shop_id'] as String? ?? '';
+            final shopId = rawShopId.isNotEmpty ? rawShopId : AuthService.instance.activeShopId;
             if (shopId.isNotEmpty) {
               await firestore
                   .collection('shops')
@@ -55,12 +57,12 @@ class SyncService {
                   .collection(collectionName)
                   .doc(docId)
                   .set(payload, SetOptions(merge: true));
-            } else {
-              await firestore
-                  .collection(collectionName)
-                  .doc(docId)
-                  .set(payload, SetOptions(merge: true));
             }
+            // Also mirror to top-level collection for direct visibility in Firebase Console
+            await firestore
+                .collection(collectionName)
+                .doc(docId)
+                .set(payload, SetOptions(merge: true));
           }
 
           await db.markSyncTaskDone(taskId);

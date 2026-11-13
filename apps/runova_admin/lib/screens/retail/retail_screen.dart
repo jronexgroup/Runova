@@ -104,58 +104,110 @@ class _RetailScreenState extends State<RetailScreen> {
   void _openAddProductDialog() {
     final nameCtrl = TextEditingController();
     final catCtrl = TextEditingController(text: 'General Accessories');
-    final supplierCtrl = TextEditingController();
+    final newSupplierCtrl = TextEditingController();
     final buyPriceCtrl = TextEditingController();
     final sellPriceCtrl = TextEditingController();
     final stockCtrl = TextEditingController(text: '10');
 
+    final existingSuppliers = ShopState.instance.suppliers;
+    String selectedSupplier = existingSuppliers.isNotEmpty ? existingSuppliers.first.name : '__NEW__';
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Add New Product'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Product Name *')),
-              TextField(controller: catCtrl, decoration: const InputDecoration(labelText: 'Category *')),
-              TextField(controller: supplierCtrl, decoration: const InputDecoration(labelText: 'Wholesaler / Supplier *')),
-              TextField(controller: buyPriceCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Buy Price (₹) *', prefixText: '₹ ')),
-              TextField(controller: sellPriceCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Default Sell Price (₹) *', prefixText: '₹ ')),
-              TextField(controller: stockCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Initial Stock Quantity *')),
-            ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Add New Product'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Product Name *')),
+                const SizedBox(height: 8),
+                TextField(controller: catCtrl, decoration: const InputDecoration(labelText: 'Category *')),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  initialValue: selectedSupplier,
+                  decoration: const InputDecoration(labelText: 'Wholesaler / Supplier *'),
+                  items: [
+                    ...existingSuppliers.map((s) => DropdownMenuItem(
+                          value: s.name,
+                          child: Text(s.name),
+                        )),
+                    const DropdownMenuItem(
+                      value: '__NEW__',
+                      child: Row(
+                        children: [
+                          Icon(Icons.add_circle_outline, size: 16, color: AppColors.primary),
+                          SizedBox(width: 6),
+                          Text('+ New Supplier', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700)),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) {
+                      setDialogState(() {
+                        selectedSupplier = val;
+                      });
+                    }
+                  },
+                ),
+                if (selectedSupplier == '__NEW__') ...[
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: newSupplierCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Enter New Supplier Name *',
+                      hintText: 'e.g. Royal Accessories Kolkata',
+                      prefixIcon: Icon(Icons.business, size: 18),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 8),
+                TextField(controller: buyPriceCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Buy Price (₹) *', prefixText: '₹ ')),
+                const SizedBox(height: 8),
+                TextField(controller: sellPriceCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Default Sell Price (₹) *', prefixText: '₹ ')),
+                const SizedBox(height: 8),
+                TextField(controller: stockCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Initial Stock Quantity *')),
+              ],
+            ),
           ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryContainer, foregroundColor: Colors.white),
-            onPressed: () async {
-              final name = nameCtrl.text.trim();
-              final cat = catCtrl.text.trim();
-              final sup = supplierCtrl.text.trim();
-              final buy = double.tryParse(buyPriceCtrl.text.trim()) ?? 0;
-              final sell = double.tryParse(sellPriceCtrl.text.trim()) ?? 0;
-              final stock = int.tryParse(stockCtrl.text.trim()) ?? 0;
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryContainer, foregroundColor: Colors.white),
+              onPressed: () async {
+                final name = nameCtrl.text.trim();
+                final cat = catCtrl.text.trim();
+                String sup = selectedSupplier == '__NEW__' ? newSupplierCtrl.text.trim() : selectedSupplier;
+                final buy = double.tryParse(buyPriceCtrl.text.trim()) ?? 0;
+                final sell = double.tryParse(sellPriceCtrl.text.trim()) ?? 0;
+                final stock = int.tryParse(stockCtrl.text.trim()) ?? 0;
 
-              if (name.isNotEmpty && buy > 0 && sell > 0) {
-                await ShopState.instance.addProduct(
-                  name: name,
-                  category: cat,
-                  supplier: sup.isNotEmpty ? sup : 'Local Wholesaler',
-                  buyPrice: Money.fromRupees(buy),
-                  defaultSellPrice: Money.fromRupees(sell),
-                  initialStock: stock,
-                );
-                if (ctx.mounted) Navigator.pop(ctx);
-                if (mounted && ShopState.instance.products.isNotEmpty) {
-                  _selectProduct(ShopState.instance.products.last);
+                if (name.isNotEmpty && buy > 0 && sell > 0) {
+                  if (selectedSupplier == '__NEW__' && sup.isNotEmpty) {
+                    await ShopState.instance.addSupplier(name: sup);
+                  }
+                  if (sup.isEmpty) sup = 'Local Wholesaler';
+
+                  await ShopState.instance.addProduct(
+                    name: name,
+                    category: cat,
+                    supplier: sup,
+                    buyPrice: Money.fromRupees(buy),
+                    defaultSellPrice: Money.fromRupees(sell),
+                    initialStock: stock,
+                  );
+                  if (ctx.mounted) Navigator.pop(ctx);
+                  if (mounted && ShopState.instance.products.isNotEmpty) {
+                    _selectProduct(ShopState.instance.products.last);
+                  }
                 }
-              }
-            },
-            child: const Text('Save Product'),
-          ),
-        ],
+              },
+              child: const Text('Save Product'),
+            ),
+          ],
+        ),
       ),
     );
   }

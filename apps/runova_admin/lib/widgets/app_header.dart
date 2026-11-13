@@ -4,7 +4,7 @@ import '../data/local/app_database.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
-/// Top App Header displaying actual Shop Name and Live indicator.
+/// Top App Header displaying actual Shop Name.
 class AppHeader extends StatefulWidget implements PreferredSizeWidget {
   final VoidCallback? onNotificationsTap;
   final VoidCallback? onProfileTap;
@@ -62,6 +62,60 @@ class _AppHeaderState extends State<AppHeader> {
     return trimmed;
   }
 
+  void _showEditShopDialog(BuildContext context) {
+    final current = AuthService.instance.activeShopName;
+    final initialText = (current == 'Runova' || current == 'Runova Shop') ? '' : current;
+    final ctrl = TextEditingController(text: initialText);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Set Shop Name'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Enter your shop name in English:',
+              style: TextStyle(fontSize: 13, color: AppColors.onSurfaceVariant),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: ctrl,
+              autofocus: true,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(
+                labelText: 'Shop Name',
+                hintText: 'e.g. Runa Mobile',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              final newName = ctrl.text.trim();
+              if (newName.isNotEmpty) {
+                await AuthService.instance.updateShopName(newName);
+                if (ctx.mounted) Navigator.pop(ctx);
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
@@ -81,62 +135,41 @@ class _AppHeaderState extends State<AppHeader> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Logo & Shop Name
-                  Row(
-                    children: [
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryContainer,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.storefront,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        shopName,
-                        style: AppTypography.headlineSm.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.onSurface,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                        decoration: BoxDecoration(
-                          color: AppColors.tertiaryContainer,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 5,
-                              height: 5,
-                              decoration: const BoxDecoration(
-                                color: AppColors.tertiaryFixedDim,
-                                shape: BoxShape.circle,
-                              ),
+                  // Logo & Shop Name (tappable to edit)
+                  InkWell(
+                    onTap: () => _showEditShopDialog(context),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryContainer,
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            const SizedBox(width: 4),
-                            const Text(
-                              'LIVE',
-                              style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                                letterSpacing: 0.5,
-                              ),
+                            child: const Icon(
+                              Icons.storefront,
+                              color: Colors.white,
+                              size: 20,
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            shopName,
+                            style: AppTypography.headlineSm.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.onSurface,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.edit_outlined, size: 14, color: AppColors.outline),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
 
                   // Actions

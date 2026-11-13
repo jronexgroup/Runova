@@ -7,44 +7,16 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Top-level user profiles
-    match /users/{userId} {
+    // Allow authenticated users to read and write all shop domain documents
+    match /{collectionName}/{docId} {
       allow read, write: if isAuthenticated();
     }
 
-    // Top-level shops and nested collections
+    // Multi-tenant subcollections under /shops/{shopId}/...
     match /shops/{shopId} {
       allow read, write: if isAuthenticated();
 
-      match /workers/{workerId} {
-        allow read, write: if isAuthenticated();
-      }
-
-      match /repair_tickets/{ticketId} {
-        allow read, write: if isAuthenticated();
-      }
-
-      match /products/{productId} {
-        allow read, write: if isAuthenticated();
-      }
-      
-      match /cover_groups/{groupId} {
-        allow read, write: if isAuthenticated();
-      }
-
-      match /sale_transactions/{saleId} {
-        allow read, write: if isAuthenticated();
-      }
-
-      match /print_transactions/{txId} {
-        allow read, write: if isAuthenticated();
-      }
-
-      match /invoices/{invoiceId} {
-        allow read, write: if isAuthenticated();
-      }
-
-      match /expenses/{expenseId} {
+      match /{subCollection}/{docId} {
         allow read, write: if isAuthenticated();
       }
     }

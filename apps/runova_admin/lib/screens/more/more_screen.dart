@@ -87,6 +87,149 @@ class _MoreScreenState extends State<MoreScreen> {
     );
   }
 
+  void _showEditShopDialog() {
+    final current = AuthService.instance.activeShopName;
+    final initialText = (current == 'Runova' || current == 'Runova Shop') ? '' : current;
+    final ctrl = TextEditingController(text: initialText);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Edit Shop Name'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Enter your shop name in English:',
+              style: TextStyle(fontSize: 13, color: AppColors.onSurfaceVariant),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: ctrl,
+              autofocus: true,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(
+                labelText: 'Shop Name',
+                hintText: 'e.g. Runa Mobile',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              final newName = ctrl.text.trim();
+              if (newName.isNotEmpty) {
+                await AuthService.instance.updateShopName(newName);
+                if (ctx.mounted) Navigator.pop(ctx);
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openAddSupplierModal() {
+    final nameCtrl = TextEditingController();
+    final phoneCtrl = TextEditingController();
+    final addressCtrl = TextEditingController();
+    String category = 'Mobile Accessories';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Add Supplier / Wholesaler'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Supplier Name *',
+                    hintText: 'e.g. Royal Accessories Kolkata',
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone Number (Optional)',
+                    prefixIcon: Icon(Icons.phone, size: 18),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                DropdownButtonFormField<String>(
+                  initialValue: category,
+                  decoration: const InputDecoration(labelText: 'Category'),
+                  items: const [
+                    DropdownMenuItem(value: 'Mobile Accessories', child: Text('Mobile Accessories')),
+                    DropdownMenuItem(value: 'Display & Touch Spare Parts', child: Text('Display & Touch Parts')),
+                    DropdownMenuItem(value: 'Printing & Xerox Paper', child: Text('Printing Paper & Toner')),
+                    DropdownMenuItem(value: 'Covers & Tempered Glass', child: Text('Covers & Glass')),
+                    DropdownMenuItem(value: 'General Wholesaler', child: Text('General Wholesaler')),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) {
+                      setDialogState(() => category = val);
+                    }
+                  },
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: addressCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Market Location / Address (Optional)',
+                    hintText: 'e.g. Chandni Chowk, Kolkata',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryContainer,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () async {
+                final name = nameCtrl.text.trim();
+                if (name.isNotEmpty) {
+                  await ShopState.instance.addSupplier(
+                    name: name,
+                    phone: phoneCtrl.text.trim(),
+                    category: category,
+                    address: addressCtrl.text.trim(),
+                  );
+                  if (ctx.mounted) Navigator.pop(ctx);
+                }
+              },
+              child: const Text('Save Supplier'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _handleSignOut() async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -441,7 +584,69 @@ class _MoreScreenState extends State<MoreScreen> {
 
             const SizedBox(height: 20),
 
-            // 4. Shop Identity & Session Information
+            // 4. Suppliers / Wholesalers Management
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const BilingualText(
+                  primary: 'Suppliers & Wholesalers',
+                  secondary: 'ডিলার ও পাইকারি বিক্রেতা',
+                  primaryStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                ),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryContainer,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  icon: const Icon(Icons.add_business, size: 16),
+                  label: const Text('Add Supplier', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                  onPressed: _openAddSupplierModal,
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+
+            if (state.suppliers.isEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.outlineVariant, width: 0.5),
+                ),
+                child: const Center(
+                  child: Column(
+                    children: [
+                      Icon(Icons.storefront_outlined, size: 32, color: AppColors.outline),
+                      SizedBox(height: 6),
+                      Text('No suppliers registered yet', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.onSurfaceVariant)),
+                      SizedBox(height: 2),
+                      Text('নতুন ডিলার যোগ করতে "Add Supplier" চাপুন', style: TextStyle(fontSize: 11, color: AppColors.outline)),
+                    ],
+                  ),
+                ),
+              )
+            else
+              ...state.suppliers.map((sup) => Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: AppColors.primaryContainer.withValues(alpha: 0.1),
+                        child: const Icon(Icons.business, color: AppColors.primaryContainer, size: 20),
+                      ),
+                      title: Text(sup.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                      subtitle: Text('${sup.category}${sup.phone.isNotEmpty ? " • 📞 ${sup.phone}" : ""}${sup.address.isNotEmpty ? " • ${sup.address}" : ""}'),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.error),
+                        onPressed: () => ShopState.instance.deleteSupplier(sup.id),
+                      ),
+                    ),
+                  )),
+
+            const SizedBox(height: 20),
+
+            // 5. Shop Identity & Session Information
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -459,12 +664,24 @@ class _MoreScreenState extends State<MoreScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              AuthService.instance.activeShopName.isNotEmpty
-                                  ? AuthService.instance.activeShopName
-                                  : 'Runova Shop',
-                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-                              overflow: TextOverflow.ellipsis,
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    AuthService.instance.activeShopName.isNotEmpty &&
+                                            AuthService.instance.activeShopName != 'Runova Shop'
+                                        ? AuthService.instance.activeShopName
+                                        : 'Set Shop Name',
+                                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                InkWell(
+                                  onTap: _showEditShopDialog,
+                                  child: const Icon(Icons.edit, size: 14, color: AppColors.primary),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 2),
                             Text(

@@ -53,6 +53,58 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Sets or updates the active Shop Name locally in SQLite and syncs to Firestore.
+  Future<void> updateShopName(String newName) async {
+    final trimmed = newName.trim();
+    if (trimmed.isEmpty) return;
+
+    final shopId = activeShopId.isNotEmpty ? activeShopId : 'SHOP-${DateTime.now().millisecondsSinceEpoch % 1000000}';
+    final uid = _currentSession?.userId ?? FirebaseAuth.instance.currentUser?.uid ?? 'ADMIN-01';
+
+    final shop = ShopInfo(
+      id: shopId,
+      name: trimmed,
+      nameBengali: _currentShop?.nameBengali ?? '',
+      address: _currentShop?.address ?? '',
+      phone: _currentShop?.phone ?? '',
+      ownerUid: uid,
+      createdAt: _currentShop?.createdAt ?? DateTime.now(),
+    );
+
+    _currentShop = shop;
+    await AppDatabase.instance.saveShop(shop);
+
+    if (_currentSession != null) {
+      _currentSession = AppSession(
+        shopId: shopId,
+        userId: _currentSession!.userId,
+        role: _currentSession!.role,
+        displayName: _currentSession!.displayName,
+        shopName: trimmed,
+        workerCode: _currentSession!.workerCode,
+        lastLoginAt: _currentSession!.lastLoginAt,
+      );
+      await AppDatabase.instance.saveSession(_currentSession!);
+    }
+
+    final firestore = FirebaseManager.instance.firestore;
+    if (firestore != null) {
+      try {
+        await firestore.collection('shops').doc(shopId).set(shop.toMap());
+        if (uid.isNotEmpty) {
+          await firestore.collection('users').doc(uid).set({
+            'shop_id': shopId,
+            'shop_name': trimmed,
+          });
+        }
+      } catch (e) {
+        debugPrint('[AuthService] Firestore updateShopName error: $e');
+      }
+    }
+
+    notifyListeners();
+  }
+
   @visibleForTesting
   void setSessionForTesting(AppSession? session) {
     _currentSession = session;
