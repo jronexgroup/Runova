@@ -20,6 +20,12 @@ class AuthService extends ChangeNotifier {
   String get activeUserName => _currentSession?.displayName ?? '';
   String get activeShopName => _currentSession?.shopName ?? '';
 
+  @visibleForTesting
+  void setSessionForTesting(AppSession? session) {
+    _currentSession = session;
+    notifyListeners();
+  }
+
   /// Restores cached session from SQLite on app startup.
   Future<void> init() async {
     final cached = await AppDatabase.instance.getSession();

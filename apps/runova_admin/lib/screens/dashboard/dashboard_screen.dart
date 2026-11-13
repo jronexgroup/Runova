@@ -35,87 +35,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           children: [
-            // 1. Shift & Status Banner
+            // 1. Date Banner
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 color: AppColors.surfaceContainerLowest,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.outlineVariant, width: 0.5),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.calendar_today, color: AppColors.primary, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: AppColors.tertiaryContainer,
-                          borderRadius: BorderRadius.circular(8),
+                      Text(
+                        'Today, ${DateFormat('d MMMM yyyy').format(DateTime.now())}',
+                        style: AppTypography.headlineSm.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.onSurface,
                         ),
-                        child: const Icon(Icons.storefront, color: Colors.white, size: 20),
                       ),
-                      const SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                'Today, ${DateFormat('d MMM').format(DateTime.now())}',
-                                style: AppTypography.headlineSm,
-                              ),
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: AppColors.surfaceContainerHigh,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 6,
-                                      height: 6,
-                                      decoration: const BoxDecoration(
-                                        color: AppColors.tertiaryFixedDim,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      '${state.counterName} Open',
-                                      style: AppTypography.labelMd.copyWith(color: AppColors.primary),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'আজকের শিফট • কাউন্টার ১ চালু আছে',
-                            style: AppTypography.labelSecondaryBilingual,
-                          ),
-                        ],
+                      const SizedBox(height: 2),
+                      Text(
+                        DateFormat('EEEE').format(DateTime.now()),
+                        style: AppTypography.labelSecondaryBilingual,
                       ),
                     ],
-                  ),
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      side: const BorderSide(color: AppColors.outlineVariant),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    icon: const Icon(Icons.sync_alt, size: 16, color: AppColors.primary),
-                    label: const Text('Shift', style: TextStyle(color: AppColors.primary, fontSize: 12)),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Shift sync completed with cloud database.')),
-                      );
-                    },
                   ),
                 ],
               ),
